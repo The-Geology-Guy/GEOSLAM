@@ -208,7 +208,7 @@ focal_data_1983.focal_data
 focal_data_1983.error_data
 ``` 
 
-![image](overview_3.png)
+![image](images/overview_3.png)
 
 ### <a name="section1.3.4">1.3.4&nbsp;&nbsp; Focal and Error Data Combined</a>
 
@@ -216,8 +216,8 @@ focal_data_1983.error_data
 eq1_1983 = focal_data_1983.data[focal_data_1983.data['ID']=='B2'].reset_index(drop=True)
 ``` 
 
-![image](overview_4.png)
-![image](overview_5.png)
+![image](images/overview_4.png)
+![image](images/overview_5.png)
 
 ### <a name="section1.4">1.4&nbsp;&nbsp; Prepare Variables for Swath Calculations</a>
 
@@ -304,7 +304,7 @@ swaths_1983 = swaths_init.swath_calc(npDipPlunge=nodal_comps_1983[3], npDipAngUn
                                      bounds=dem_file.bounds, thin=False)
 ```                                     
 
-![image](overview_7.png)
+![image](images/overview_7.png)
 
 ### <a name="section1.5.1">1.5.1&nbsp;&nbsp;&#8239; Determine Seismo-Lineament Bounds</a>
 
@@ -325,10 +325,6 @@ Finished assessment of Seismo-Lineament boundary area in 10.39 seconds
 maps = slam.SLAM_viz(elevation=dem_file.elevation)
 ```
 
-<div style="page-break-after: always;"></div>
-
-<p>&nbsp;</p>
-
 ### <a name="section1.6.1">1.6.1&nbsp;&nbsp;&#8239; Elevation Map using Open Topography DEM File</a>
 
 ``` python
@@ -340,7 +336,7 @@ maps.elevation_map(middle_road=swaths_1983.middle_road, swaths_shade=swaths_shad
 ```  
 
 
-<p align="center"><img src="truckee_elev_1983.png"/></p>
+<p align="center"><img src="images/truckee_elev_1983.png"/></p>
 
 ### <a name="section1.6.2">1.6.2&nbsp;&nbsp; Physical Map using Stamen and OpenStreetMap</a>
 
@@ -352,13 +348,9 @@ maps.physical_map(middle_road=swaths_1983.middle_road, swaths_shade=swaths_shade
 ```  
 
 
-<p align="center"><img src="truckee_phys_1983.png"/></p>
+<p align="center"><img src="images/truckee_phys_1983.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
-
-<div style="page-break-after: always;"></div>
-
-<p>&nbsp;</p>
 
 ### <a name="section1.6.3">1.6.3&nbsp;&nbsp; Multiple Solutions - Elevation Map</a>
 
@@ -386,7 +378,7 @@ maps.elevation_mult(swaths_shade=swaths_shade_mult, lightDirection=lightDirectio
                     rake=rake_mult, title=title, colors_=colors_, faults=qfaults)
 ```
 
-<p align="center"><img src="truckee_elev_all.png"/></p>
+<p align="center"><img src="images/truckee_elev_all.png"/></p>
 
 ### <a name="section1.6.4">1.6.4&nbsp;&nbsp; Multiple Solutions - Physical Map</a>
 
@@ -397,7 +389,7 @@ maps.physical_mult(lon=lon_mult, lat=lat_mult, lon_max=lon_max, lon_min=lon_min,
                    faults=qfaults, focal_size=0.5)
 ```
 
-<p align="center"><img src="truckee_phys_all.png"/></p>
+<p align="center"><img src="images/truckee_phys_all.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -473,7 +465,7 @@ lightDirection = swaths_init.light_direction(nodal_comps[1])
 
 ```
 
-![image](1966_1.png)
+![image](images/1966_1.png)
 
 #### Calcualte Swath Bounds
 
@@ -487,7 +479,7 @@ swaths = swaths_init.swath_calc(npDipPlunge=nodal_comps[3], npDipAngUncert=nodal
                                 bounds=dem_file.bounds, thin=True)
 ```
 
-![image](1966_2.png)
+![image](images/1966_2.png)
 
 #### Calculate Swath Shading
 
@@ -513,7 +505,7 @@ maps.elevation_map(middle_road=swaths.middle_road, swaths_shade=swaths_shade, li
                    rake=180, title='A1', faults=qfaults, facecolor='w', bgcolor='k')
 ```
 
-<p align="center"><img src="truckee_elev_1966.png"/></p>
+<p align="center"><img src="images/truckee_elev_1966.png"/></p>
 
 ``` python
 maps.physical_map(middle_road=swaths.middle_road, swaths_shade=swaths_shade, lon=focal_data[1], lat=focal_data[0], lon_max=lon_max, 
@@ -522,7 +514,7 @@ maps.physical_map(middle_road=swaths.middle_road, swaths_shade=swaths_shade, lon
                   facecolor='w', bgcolor='k', tiler_size=11)
 ```
 
-<p align="center"><img src="truckee_phys_1966.png"/></p>
+<p align="center"><img src="images/truckee_phys_1966.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -542,20 +534,20 @@ events_1983 = data.event_query(start_time='1983-07-02', end_time='1983-07-04', m
 Downloaded Regional Earthquake Data in 0.6760 seconds
 ```
 
-![image](overview_1.png)
+![image](images/overview_1.png)
 
 ``` python
 focal_data_1983 = data.focal_data(earthquakes=events_1983)
 focal_data_1983.focal_data
 ```
 
-![image](overview_2.png)
+![image](images/overview_2.png)
 
 ``` python
 focal_data_1983.error_data
 ```
 
-![image](overview_3.png)
+![image](images/overview_3.png)
 
 ---
 
@@ -565,8 +557,8 @@ focal_data_1983.error_data
 eq1_1983 = focal_data_1983.data[focal_data_1983.data['ID']=='B2'].reset_index(drop=True)
 ``` 
 
-![image](overview_4.png)
-![image](overview_5.png)
+![image](images/overview_4.png)
+![image](images/overview_5.png)
 
 #### Prepare Variables for Swath Calculation
 
@@ -595,7 +587,7 @@ lightDirection_1983 = swaths_init.light_direction(nodal_comps_1983[1])
 
 ```
 
-![image](overview_6.png)
+![image](images/overview_6.png)
 
 #### Calcualte Swath Bounds
 
@@ -609,7 +601,7 @@ swaths_1983 = swaths_init.swath_calc(npDipPlunge=nodal_comps_1983[3], npDipAngUn
                                      bounds=dem_file.bounds, thin=False)
 ``` 
 
-![image](overview_7.png)
+![image](images/overview_7.png)
 
 #### Calculate Swath Shading
 
@@ -636,7 +628,7 @@ maps.elevation_map(middle_road=swaths_1983.middle_road, swaths_shade=swaths_shad
                    faults=qfaults, title='A2')
 ```
 
-<p align="center"><img src="truckee_elev_1983.png"/></p>
+<p align="center"><img src="images/truckee_elev_1983.png"/></p>
 
 ``` python
 maps.physical_map(middle_road=swaths_1983.middle_road, swaths_shade=swaths_shade_1983, 
@@ -645,7 +637,7 @@ maps.physical_map(middle_road=swaths_1983.middle_road, swaths_shade=swaths_shade
                   dip=eq1_1983.np1_dip, rake=eq1_1983.np1_rake, title='A2', tiler_size=11, faults=qfaults)
 ```
 
-<p align="center"><img src="truckee_phys_1983.png"/></p>
+<p align="center"><img src="images/truckee_phys_1983.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -662,14 +654,14 @@ events_1992 = data.event_query(start_time='1992-08-29', end_time='1992-08-31', m
 Downloaded Regional Earthquake Data in 1.1810 seconds
 ```
 
-![image](1992_1.png)
+![image](images/1992_1.png)
 
 ``` python
 focal_data_1992 = data.focal_data(earthquakes=events_1992)
 focal_data_1992.focal_data
 ```
 
-![image](1992_2.png)
+![image](images/1992_2.png)
 
 ``` python
 focal_data_1992.error_data
@@ -681,8 +673,8 @@ focal_data_1992.error_data
 eq1_1992 = focal_data_1992.data[focal_data_1992.data['ID']=='A2'].reset_index(drop=True)
 ```
 
-![image](1992_4.png)
-![image](1992_5.png)
+![image](images/1992_4.png)
+![image](images/1992_5.png)
 
 #### Prepare Variables for Swath Calculation
 
@@ -708,7 +700,7 @@ err_comps_1992 = swaths_init.err_computations(eh1=539, eh2=26, eh1Az=64, ez=0.15
 lightDirection_1992 = swaths_init.light_direction(nodal_comps_1992[1])
 ```
 
-![image](1992_6.png)
+![image](images/1992_6.png)
 
 #### Calcualte Swath Bounds
 
@@ -722,7 +714,7 @@ swaths_1992 = swaths_init.swath_calc(npDipPlunge=nodal_comps_1992[3], npDipAngUn
                                      bounds=dem_file.bounds, thin=False)
 ```
 
-![image](1992_7.png)
+![image](images/1992_7.png)
 
 #### Calculate Swath Shading
 
@@ -752,7 +744,7 @@ maps.physical_map(middle_road=swaths_1992.middle_road, swaths_shade=swaths_shade
                   dip=eq1_1992.np2_dip, rake=eq1_1992.np2_rake, title='A3', tiler_size=11, faults=qfaults)
 ```
 
-<p align="center"><img src="truckee_phys_1992.png"/></p>
+<p align="center"><img src="images/truckee_phys_1992.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -778,7 +770,7 @@ maps.elevation_mult(swaths_shade=swaths_shade_mult, lightDirection=lightDirectio
                     rake=rake_mult, title=title, colors_=colors_, faults=qfaults)
 ```
 
-<p align="center"><img src="truckee_elev_all.png"/></p>
+<p align="center"><img src="images/truckee_elev_all.png"/></p>
 
 ``` python
 maps.physical_mult(lon=lon_mult, lat=lat_mult, lon_max=lon_max, lon_min=lon_min, 
@@ -787,7 +779,7 @@ maps.physical_mult(lon=lon_mult, lat=lat_mult, lon_max=lon_max, lon_min=lon_min,
                    faults=qfaults, focal_size=0.5)
 ```
 
-<p align="center"><img src="truckee_phys_all.png"/></p>
+<p align="center"><img src="images/truckee_phys_all.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -848,20 +840,20 @@ events_2014 = data.event_query(start_time='2014-08-25', end_time='2014-08-27', m
 Downloaded Regional Earthquake Data in 0.6760 seconds
 ```
 
-![image](2014a_2.png)
+![image](images/2014a_2.png)
 
 ``` python
 focal_data_2014 = data.focal_data(earthquakes=events_2014)
 focal_data_2014.focal_data
 ```
 
-![image](2014a_3.png)
+![image](images/2014a_3.png)
 
 ``` python
 focal_data_2014.error_data
 ```
 
-![image](2014a_4.png)
+![image](images/2014a_4.png)
 
 #### Filter the data for the earthquake of interest
 
@@ -869,8 +861,8 @@ focal_data_2014.error_data
 eq1_2014 = focal_data_2014.data[focal_data_2014.data['ID']=='A'].reset_index(drop=True)
 ``` 
 
-![image](2014a_5.png)
-![image](2014a_6.png)
+![image](images/2014a_5.png)
+![image](images/2014a_6.png)
 
 #### Prepare Variables for Swath Calculation
 
@@ -899,7 +891,7 @@ lightDirection_2014 = swaths_init.light_direction(nodal_comps_2014[1])
 
 ```
 
-![image](2014a_7.png)
+![image](images/2014a_7.png)
 
 #### Calcualte Swath Bounds
 
@@ -913,7 +905,7 @@ swaths_2014 = swaths_init.swath_calc(npDipPlunge=nodal_comps_2014[3], npDipAngUn
                                      bounds=dem_file.bounds, thin=True)
 ``` 
 
-![image](2014a_8.png)
+![image](images/2014a_8.png)
 
 #### Calculate Swath Shading
 
@@ -948,7 +940,7 @@ maps.physical_map(middle_road=swaths_2014.middle_road, swaths_shade=swaths_shade
                   dip=eq1_2014.np1_dip, rake=eq1_2014.np1_rake, title='A1', tiler_size=11)
 ```
 
-<p align="center"><img src="napa_phys_2014a.png"/></p>
+<p align="center"><img src="images/napa_phys_2014a.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -968,20 +960,20 @@ events_2014_b = data.event_query(start_time='2014-08-23', end_time='2014-08-25',
 Downloaded Regional Earthquake Data in 1.2241 seconds
 ```
 
-![image](2014b_2.png)
+![image](images/2014b_2.png)
 
 ``` python
 focal_data_2014_b = data.focal_data(earthquakes=events_2014_b)
 focal_data_2014_b.focal_data
 ```
 
-![image](2014b_3.png)
+![image](images/2014b_3.png)
 
 ``` python
 focal_data_2014_b.error_data
 ```
 
-![image](2014b_4.png)
+![image](images/2014b_4.png)
 
 #### Filter the data for the earthquake of interest
 
@@ -989,8 +981,8 @@ focal_data_2014_b.error_data
 eq1_2014_b = focal_data_2014_b.data[focal_data_2014_b.data['ID']=='B'].reset_index(drop=True)
 ``` 
 
-![image](2014b_5.png)
-![image](2014b_6.png)
+![image](images/2014b_5.png)
+![image](images/2014b_6.png)
 
 #### Prepare Variables for Swath Calculation
 
@@ -1019,7 +1011,7 @@ lightDirection_2014_b = swaths_init.light_direction(nodal_comps_2014_b[1])
 
 ```
 
-![image](2014b_7.png)
+![image](images/2014b_7.png)
 
 #### Calcualte Swath Bounds
 
@@ -1033,7 +1025,7 @@ swaths_2014_b = swaths_init.swath_calc(npDipPlunge=nodal_comps_2014_b[3], npDipA
                                        bounds=dem_file.bounds, thin=True)
 ``` 
 
-![image](2014b_8.png)
+![image](images/2014b_8.png)
 
 #### Calculate Swath Shading
 
@@ -1060,7 +1052,7 @@ maps.elevation_map(middle_road=swaths_2014_b.middle_road, swaths_shade=swaths_sh
                    rake=eq1_2014_b.np2_rake, faults=qfaults, title='A2')
 ```
 
-<p align="center"><img src="napa_elev_2014b.png"/></p>
+<p align="center"><img src="images/napa_elev_2014b.png"/></p>
 
 ``` python
 maps.physical_map(middle_road=swaths_2014_b.middle_road, swaths_shade=swaths_shade_2014_b, 
@@ -1069,7 +1061,7 @@ maps.physical_map(middle_road=swaths_2014_b.middle_road, swaths_shade=swaths_sha
                   dip=eq1_2014_b.np2_dip, rake=eq1_2014_b.np2_rake, title='A2', faults=qfaults, tiler_size=11)
 ```
 
-<p align="center"><img src="napa_phys_2014b.png"/></p>
+<p align="center"><img src="images/napa_phys_2014b.png"/></p>
 
 Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a>
 
@@ -1084,8 +1076,8 @@ focal_data_2014_b = data.focal_data(earthquakes=events_2014_b)
 eq1_2014_c = focal_data_2014_b.data[focal_data_2014_b.data['ID']=='A'].reset_index(drop=True)
 ```
 
-![image](2014c_4.png)
-![image](2014c_5.png)
+![image](images/2014c_4.png)
+![image](images/2014c_5.png)
 
 #### Prepare Variables for Swath Calculation
 
@@ -1114,7 +1106,7 @@ lightDirection_2014_c = swaths_init.light_direction(nodal_comps_2014_c[1])
 
 ```
 
-![image](2014c_6.png)
+![image](images/2014c_6.png)
 
 #### Calcualte Swath Bounds
 
@@ -1128,7 +1120,7 @@ swaths_2014_c = swaths_init.swath_calc(npDipPlunge=nodal_comps_2014_c[3], npDipA
                                        bounds=dem_file.bounds, thin=True)
 ``` 
 
-![image](2014c_7.png)
+![image](images/2014c_7.png)
 
 #### Calculate Swath Shading
 
@@ -1156,7 +1148,7 @@ maps.elevation_map(middle_road=swaths_2014_c.middle_road, swaths_shade=swaths_sh
                    rake=eq1_2014_c.np2_rake, faults=qfaults, title='A3')
 ```
 
-<p align="center"><img src="napa_elev_2014c.png"/></p>
+<p align="center"><img src="images/napa_elev_2014c.png"/></p>
 
 ``` python
 maps.physical_map(middle_road=swaths_2014_c.middle_road, swaths_shade=swaths_shade_2014_c, 
@@ -1165,7 +1157,7 @@ maps.physical_map(middle_road=swaths_2014_c.middle_road, swaths_shade=swaths_sha
                   dip=eq1_2014_c.np2_dip, rake=eq1_2014_c.np2_rake, title='A3', faults=qfaults, tiler_size=11)
 ```
 
-<p align="center"><img src="napa_phys_2014c.png"/></p>
+<p align="center"><img src="images/napa_phys_2014c.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -1191,7 +1183,7 @@ maps.elevation_mult(swaths_shade=swaths_shade_mult, lightDirection=lightDirectio
                     rake=rake_mult, title=title, colors_=colors_)
 ```
 
-<p align="center"><img src="napa_elev_all.png"/></p>
+<p align="center"><img src="images/napa_elev_all.png"/></p>
 
 ``` python
 maps.physical_mult(lon=lon_mult, lat=lat_mult, lon_max=lon_max, lon_min=lon_min, 
@@ -1199,7 +1191,7 @@ maps.physical_mult(lon=lon_mult, lat=lat_mult, lon_max=lon_max, lon_min=lon_min,
                    dip=dip_mult, rake=rake_mult, title=title, tiler_size=11, focal_size=0.5)
 ```
 
-<p align="center"><img src="napa_phys_all.png"/></p>
+<p align="center"><img src="images/napa_phys_all.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
@@ -1260,20 +1252,20 @@ events_2020 = data.event_query(start_time='2020-08-08', end_time='2020-08-10', m
 Downloaded Regional Earthquake Data in 0.6505 seconds
 ```
 
-![image](2020_2.png)
+![image](images/2020_2.png)
 
 ``` python
 focal_data_2020 = data.focal_data(earthquakes=events_2020)
 focal_data_2020.focal_data
 ```
 
-![image](2020_3.png)
+![image](images/2020_3.png)
 
 ``` python
 focal_data_2020.error_data
 ```
 
-![image](2020_4.png)
+![image](images/2020_4.png)
 
 #### Filter the data for the earthquake of interest
 
@@ -1281,8 +1273,8 @@ focal_data_2020.error_data
 eq1_2020 = focal_data_2020.data
 ``` 
 
-![image](2020_5.png)
-![image](2020_6.png)
+![image](images/2020_5.png)
+![image](images/2020_6.png)
 
 ## Prepare Variables for Swath Calculation
 
@@ -1311,7 +1303,7 @@ lightDirection_2020 = swaths_init.light_direction(nodal_comps_2020[1])
 
 ```
 
-![image](2020_7.png)
+![image](images/2020_7.png)
 
 #### Calcualte Swath Bounds
 
@@ -1325,7 +1317,7 @@ swaths_2020 = swaths_init.swath_calc(npDipPlunge=nodal_comps_2020[3], npDipAngUn
                                      bounds=dem_file.bounds, thin=False)
 ``` 
 
-![image](2020_8.png)
+![image](images/2020_8.png)
 
 #### Calculate Swath Shading
 
@@ -1351,7 +1343,7 @@ maps.elevation_map(middle_road=swaths_2020.middle_road, swaths_shade=swaths_shad
                    strike=299, dip=59, rake=51, title='A1', faults=qfaults)
 ```
 
-<p align="center"><img src="sparta_elev.png"/></p>
+<p align="center"><img src="images/sparta_elev.png"/></p>
 
 ``` python
 maps.physical_map(middle_road=swaths_2020.middle_road, swaths_shade=swaths_shade_2020, 
@@ -1360,7 +1352,7 @@ maps.physical_map(middle_road=swaths_2020.middle_road, swaths_shade=swaths_shade
                   dip=59, rake=51, title='A1', faults=qfaults, tiler_size=11)
 ```
 
-<p align="center"><img src="sparta_phys.png"/></p>
+<p align="center"><img src="images/sparta_phys.png"/></p>
 
 <p align="center">Map tiles by <a href='http://stamen.com'>Stamen Design</a>, under <a href='http://creativecommons.org/licenses/by/3.0'>CC BY 3.0</a>. Data by <a href='http://openstreetmap.org'>OpenStreetMap</a>, under <a href='http://www.openstreetmap.org/copyright'>ODbL</a></p>
 
