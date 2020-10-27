@@ -1,5 +1,3 @@
-<img style="float: right;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcR60JFfwb38fy-pfj7thjp7x0UWOlyBZ3CiotnrYUgvNY9gsZKS&usqp=CAU" width="125"/>
-
 # ADDING A PYTHONIC RESOURCE TO THE SLAM METHOD
 
 Project Resources: [PAJER, Luke](mailto:luke.pajer@gmail.com); [Cronin, Vincent]()
