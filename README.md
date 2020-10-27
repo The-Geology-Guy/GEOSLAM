@@ -1,6 +1,6 @@
-# ADDING A PYTHONIC RESOURCE TO THE SLAM METHOD
+# Seismo-Lineament Analysis Method (SLAM)
 
-Project Resources: [PAJER, Luke](mailto:luke.pajer@gmail.com); [Cronin, Vincent]()
+Project Resources: [PAJER, Luke](mailto:luke.pajer@gmail.com); [Cronin, Vincent](mailto:vince_cronin@baylor.edu)
 
 _Last Updated: June 2020_
 
