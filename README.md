@@ -171,7 +171,7 @@ qfaults = qFaults.get_qfaults()
 
 ### <a name="section1.2.1">1.2.1&nbsp;&nbsp;&#8239; Different Shape Files Available via USGS</a>
 
-Default value for `get_qfaults` for the file name of the shape file is 'hazfaults2014'. Other files can be found on the [qfaults](https://earthquake.usgs.gov/static/lfs/nshm/qfaults/) page. However, not all of the files are shapefiles. If the selection is not a shape file, it will return an error.
+Default value for `get_qfaults` for the file name of the shape file is 'Qfaults_GIS'. Other files can be found on the [qfaults](https://earthquake.usgs.gov/static/lfs/nshm/qfaults/) page. However, not all of the files are shapefiles. If the selection is not a shape file, it will return an error.
 
 ### <a name="section1.3">1.3&nbsp;&nbsp; Obtain Event Data</a>
 
@@ -191,7 +191,7 @@ events_1983 = data.event_query(start_time='1983-07-02', end_time='1983-07-04', m
 Downloaded Regional Earthquake Data in 0.6760 seconds
 ``` 
 
-![image](overview_1.png)
+![image](images/overview_1.png)
 
 ### <a name="section1.3.2">1.3.2&nbsp;&nbsp; Get Individual Focal Data</a>
 
@@ -200,7 +200,7 @@ focal_data_1983 = data.focal_data(earthquakes=events_1983)
 focal_data_1983.focal_data
 ```
 
-![image](overview_2.png)
+![image](images/overview_2.png)
 
 ### <a name="section1.3.3">1.3.3&nbsp;&nbsp; Viewing Error Data</a>
 
