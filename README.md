@@ -28,10 +28,10 @@ If there are any issues or concerns with the python package, please reach out to
 This project is an open project, and contributions are welcome from any individual. All contributors to this project are bound by a [code of conduct](/CODE_OF_CONDUCT.md). Please review and follow this code of conduct as part of your contribution.
 
 #### Contributions to the SLAM Python Package
-- [Luke Pajer](mailto:luke.pajer@gmail.com)
+- [Luke Pajer](mailto:luke.pajer@gmail.com) [![orcid](https://img.shields.io/badge/orcid-0000--0002--5218--7650-brightgreen.svg)](https://orcid.org/0000-0002-5218-7650)
 
 #### SLAM Author/Developer
-- [Vince Cronin](mailto:vince_cronin@baylor.edu)
+- [Vince Cronin](mailto:vince_cronin@baylor.edu) [![orcid](https://img.shields.io/badge/orcid-0000--0002--3069--6470-brightgreen.svg)](https://orcid.org/0000-0002-3069-6470)
 
 In addition, there are a few thesis projects used when developing the SLAM package. These were instrumental in developing and troubleshooting the package. Below are the Thesis projects referenced during development:
 
