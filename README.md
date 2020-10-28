@@ -4,6 +4,7 @@ Main Project Resources: [PAJER, Luke](mailto:luke.pajer@gmail.com); [CRONIN, Vin
 
 _Last Updated: October 2020_
 
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 [![croninprojects.org home](https://img.shields.io/badge/croninprojects.org-home-F78C26.svg)](http://croninprojects.org/)
 [![License](https://img.shields.io/badge/LICENSE-mit-43B02A.svg)](/LICENSE)
 [![jupyterlab](https://img.shields.io/badge/jupyterlab-0.35.4-F37821.svg)](https://jupyterlab.readthedocs.io/en/stable/)
