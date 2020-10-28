@@ -67,9 +67,13 @@ Once again, this is a simple overview of a typical SLAM task. This is in no way 
 
 This project is developed using Python. There should be no issues with these projects running on Mac, Windows, or Linux. If there are any issues, please submit an issue and it will be investigated.
 
-### Data Resources used in SLAM
+### Data Resources used in GEOSLAM
 
 #### Data Sources
+
+- The [USGS Earthquake Catalog API](https://earthquake.usgs.gov/fdsnws/event/1/) is used to query for earthquake events within the user defined latitude and longitude bounds. When citing the earthquake, use the ID number provided in the query table generated to find the information needed to create an appropriate citation.
+
+- The [USGS Quaternary Faults and Folds database](https://www.usgs.gov/natural-hazards/earthquake-hazards/faults?qt-science_support_page_related_con=4#qt-science_support_page_related_con) provides a shapefile to overlay faults and folds of the last 1.65 Million years on the output maps. To see how to properly cite the faults and folds used when using this data, please navigate to the folowing page: https://www.usgs.gov/natural-hazards/earthquake-hazards/faults.
 
 #### Physical Maps and Digital Elevation Model (DEM) Sources
 
@@ -91,20 +95,13 @@ _SRTM:_
 
 ### Key Outputs
 
-This project generates (an API, some log files, what?)
+GEOSLAM provides the user a map with seismo-lineament bounds defined. Below are two examples:
 
-## REFERENCES AND NOTABLE PACKAGES USED
+#### Example map when the Strike, Dip, and Rake errors are unknown
+![image](images/truckee_elev_1966.png)
 
-
-- https://croninprojects.org/Rasaka/Rasaka-MS-Thesis-2016.pdf  
-- https://baylor-ir.tdl.org/bitstream/handle/2104/9796/WORRELL-THESIS-2016.pdf?sequence=1&isAllowed=y  
-- https://croninprojects.org/Vince/SLAM/CurrentBaseCodes.html  
-- http://serc.carleton.edu/files/NAGTWorkshops/structure04/Focal_mechanism_primer.pdf  
-- https://croninprojects.org/Vince/SLAM/SLAMWorkflow.html  
-- https://portal.opentopography.org/apidocs/#/Public/getGlobalDem  
-- https://rasterio.readthedocs.io/en/latest/  
-- https://earthquake.usgs.gov/fdsnws/event/1/  
-- https://docs.obspy.org/  
+#### Example map when the Strike, Dip, and Rake errors are known
+![image](images/truckee_elev_1983.png)
 
 -----
 
