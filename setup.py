@@ -21,9 +21,9 @@ setup(
     description=('Seismo-Lineament Analysis Method'),
     long_description=long_description,
     author='Luke Pajer',
-    author_email='bruce.wayne@example.com',
+    author_email='luke.pajer@gmail.com',
     url='https://github.com/The-Geology-Guy/SLAM',
-    license='MPL-2.0',
+    license='mit',
     packages=['SLAM'],
     install_requires=[
         'pandas',
