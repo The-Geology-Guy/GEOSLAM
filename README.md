@@ -69,13 +69,13 @@ This project is developed using Python. There should be no issues with these pro
 
 ### Data Resources used in GEOSLAM
 
-#### Data Sources
+#### A. Data Sources
 
 - The [USGS Earthquake Catalog API](https://earthquake.usgs.gov/fdsnws/event/1/) is used to query for earthquake events within the user defined latitude and longitude bounds. When citing the earthquake, use the ID number provided in the query table generated to find the information needed to create an appropriate citation.
 
 - The [USGS Quaternary Faults and Folds database](https://www.usgs.gov/natural-hazards/earthquake-hazards/faults?qt-science_support_page_related_con=4#qt-science_support_page_related_con) provides a shapefile to overlay faults and folds of the last 1.65 Million years on the output maps. To see how to properly cite the faults and folds used when using this data, please navigate to the folowing page: https://www.usgs.gov/natural-hazards/earthquake-hazards/faults.
 
-#### Physical Maps and Digital Elevation Model (DEM) Sources
+#### B. Physical Maps and Digital Elevation Model (DEM) Sources
 
 - [OpenTopography](https://opentopography.org/) This work is based on [data, processing] services provided by the OpenTopography Facility with support from the National Science Foundation under NSF Award Numbers 1948997, 1948994 & 1948857.
 
