@@ -9,7 +9,7 @@ _Last Updated: October 2020_
 [![License](https://img.shields.io/badge/LICENSE-mit-43B02A.svg)](/LICENSE)
 [![jupyterlab](https://img.shields.io/badge/jupyterlab-0.35.4-F37821.svg)](https://jupyterlab.readthedocs.io/en/stable/)
 [![python](https://img.shields.io/badge/python-3.6.5-yellow.svg)](https://jupyterlab.readthedocs.io/en/stable/)
-[![wiki](https://img.shields.io/badge/wiki-complete-orange)](https://github.com/The-Geology-Guy/SLAM/wiki)
+[![wiki](https://img.shields.io/badge/wiki-complete-orange)](https://github.com/The-Geology-Guy/GEOSLAM/wiki)
 
 -----
 
@@ -51,7 +51,7 @@ All products of the SLAM project are licensed under an [MIT License](LICENSE) un
 
 This repository is available to be 
 
-Base overview for SLAM map generation (_see the [SLAM Wiki](https://github.com/The-Geology-Guy/SLAM/wiki) for more information_):
+Base overview for SLAM map generation (_see the [GEOSLAM Wiki](https://github.com/The-Geology-Guy/GEOSLAM/wiki) for more information_):
 1. Get a DEM file for a specific area (_max lat/lon and min lat/lon must be set via variables_)  
 2. Instantiate qFaults shapefile for quaternary faults and folds to be plotted on map  
 3. Gather Event data (_you can either use the SLAM function to query or enter data yourself_)  
@@ -60,10 +60,10 @@ Base overview for SLAM map generation (_see the [SLAM Wiki](https://github.com/T
 6. Determine errors relative to the 1st Nodal Plane  
 7. Calculate light direction for hill-shade map  
 8. Calculate the 7 swaths using the `swath_calc` function  
-9. Determine Seismo-Lineament Boundaries using the `get_shade` function (_there also may be a need to fill in some gaps in the boundary area, to do this, specify where the gaps are on the map via the 'corners_fill' attribute -- see the [SLAM Wiki](https://github.com/The-Geology-Guy/SLAM/wiki) for more information_)  
-10. Plot the focal mechanism and Seismo-Lineament boundaries on a map using any of the map types available -- (_see the [SLAM Wiki](https://github.com/The-Geology-Guy/SLAM/wiki) for more information_)
+9. Determine Seismo-Lineament Boundaries using the `get_shade` function (_there also may be a need to fill in some gaps in the boundary area, to do this, specify where the gaps are on the map via the 'corners_fill' attribute -- see the [GEOSLAM Wiki](https://github.com/The-Geology-Guy/GEOSLAM/wiki) for more information_)  
+10. Plot the focal mechanism and Seismo-Lineament boundaries on a map using any of the map types available -- (_see the [GEOSLAM Wiki](https://github.com/The-Geology-Guy/GEOSLAM/wiki) for more information_)
 
-Once again, this is a simple overview of a typical SLAM task. This is in no way the limit of what can be done. See the [SLAM Wiki](https://github.com/The-Geology-Guy/SLAM/wiki) for more information.
+Once again, this is a simple overview of a typical SLAM task. This is in no way the limit of what can be done. See the [GEOSLAM Wiki](https://github.com/The-Geology-Guy/GEOSLAM/wiki) for more information.
 
 ### System Requirements
 
