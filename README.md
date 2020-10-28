@@ -1,4 +1,4 @@
-# SEISMO-LINEAMENT ANALYSIS METHOD (SLAM)
+# GEOLOGICAL SEISMO-LINEAMENT ANALYSIS METHOD (GEOSLAM)
 
 Main Project Resources: [PAJER, Luke](mailto:luke.pajer@gmail.com); [CRONIN, Vincent](mailto:vince_cronin@baylor.edu)
 
@@ -15,13 +15,13 @@ _Last Updated: October 2020_
 
 # PROJECT OVERVIEW
 
-The Seismo-Lineament Analysis Method (SLAM) Python package is a simple translation of the mathematica code developed by Vince Cronin. The purpose of this package is to make SLAM available to those who are interested in SLAM, but are more comfortable using Python.
+The Geological Seismo-Lineament Analysis Method (GEOSLAM) Python package is a simple translation of the Seismo-Lineament Analysis Method (SLAM) mathematica code developed by Vince Cronin. The purpose of this package is to make SLAM available to those who are interested in SLAM, but are more comfortable using Python. _For clarification, GEOSLAM is the python package for the SLAM process._
 
 _From [Vince Cronin's website](https://croninprojects.org/Vince/SLAM/index.htm):_
 
 > The seismo-lineament analysis method is a tool to spatially correlate a shallow-focus earthquake to the surface trace of the fault that generated it. SLAM is the intellectual property and work product of Vince Cronin, and has been developed with assistance from Brandon Rasaka, Victoria Worrell, Jeremy Ashburn, Brian Bayliss, Chris Breed, Bruce Byars, Ryan Campbell, David Cleveland, Jon Cook, Kelly Cronin, Jordan Dickinson, Daniel Lancaster, Ryan Lindsay, Mark Millard, Shane Prochnow, Tyler Reed, Stephen Secrest, Lauren Seidman Robinson, Keith Sverdrup and Lisa Zygo, with funds from AAPG, Baylor University, Colorado Scientific Society, Ellis Exploration, Ft. Worth Geological Society, Geological Society of America, GCAGS, Samson Resources, Roy Shlemon Scholarship Fund, Sigma Xi, and SIPES.
 
-If there are any issues or concerns with the python package, please reach out to [Luke Pajer](mailto:luke.pajer@gmail.com). For any questions regarding SLAM, please reach out to [Vince Cronin](mailto:vince_cronin@baylor.edu).
+If there are any issues or concerns with the GEOSLAM python package, please reach out to [Luke Pajer](mailto:luke.pajer@gmail.com). For any questions regarding SLAM, please reach out to [Vince Cronin](mailto:vince_cronin@baylor.edu).
 
 ## CONTRIBUTORS
 
