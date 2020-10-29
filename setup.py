@@ -12,7 +12,7 @@ else:
         long_description = f.read()
 
 version = {}
-with open(os.path.join(_here, 'SLAM', 'version.py')) as f:
+with open(os.path.join(_here, 'GEOSLAM', 'version.py')) as f:
     exec(f.read(), version)
 
 setup(
