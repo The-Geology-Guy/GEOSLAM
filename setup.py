@@ -17,13 +17,13 @@ with open(os.path.join(_here, 'SLAM', 'version.py')) as f:
 
 setup(
     name='SLAM',
-    version=version['__version__'],
+    version=version['0.0.1'],
     description=('Seismo-Lineament Analysis Method'),
     long_description=long_description,
     author='Luke Pajer',
     author_email='luke.pajer@gmail.com',
     url='https://github.com/The-Geology-Guy/SLAM',
-    license='mit',
+    license='MIT',
     packages=['SLAM'],
     install_requires=[
         'pandas',
