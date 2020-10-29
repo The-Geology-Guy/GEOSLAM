@@ -17,7 +17,7 @@ with open(os.path.join(_here, 'GEOSLAM', 'version.py')) as f:
 
 setup(
     name='GEOSLAM',
-    version=version['0.0.1'],
+    version=version['__version__'],
     description=('Seismo-Lineament Analysis Method'),
     long_description=long_description,
     author='Luke Pajer',
