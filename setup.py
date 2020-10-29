@@ -16,15 +16,15 @@ with open(os.path.join(_here, 'SLAM', 'version.py')) as f:
     exec(f.read(), version)
 
 setup(
-    name='SLAM',
+    name='GEOSLAM',
     version=version['0.0.1'],
     description=('Seismo-Lineament Analysis Method'),
     long_description=long_description,
     author='Luke Pajer',
     author_email='luke.pajer@gmail.com',
-    url='https://github.com/The-Geology-Guy/SLAM',
+    url='https://github.com/The-Geology-Guy/GEOSLAM',
     license='MIT',
-    packages=['SLAM'],
+    packages=['GEOSLAM'],
     install_requires=[
         'pandas',
         'geopandas',
