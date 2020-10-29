@@ -23,7 +23,7 @@ setup(
     author='Luke Pajer',
     author_email='luke.pajer@gmail.com',
     url='https://github.com/The-Geology-Guy/GEOSLAM',
-    download_url='https://github.com/The-Geology-Guy/GEOSLAM/archive/0.0.1.tar.gz',
+    download_url='https://github.com/The-Geology-Guy/GEOSLAM/archive/0.0.2.tar.gz',
     license='MIT',
     packages=['GEOSLAM'],
     install_requires=[
