@@ -15,7 +15,7 @@ _Last Updated: October 2020_
 
 # PROJECT OVERVIEW
 
-The Geological Seismo-Lineament Analysis Method (GEOSLAM) Python package is a simple translation of the Seismo-Lineament Analysis Method (SLAM) mathematica code developed by Vince Cronin. The purpose of this package is to make SLAM available to those who are interested in SLAM, but are more comfortable using Python. _For clarification, GEOSLAM is the python package for the SLAM process._
+The Geological Seismo-Lineament Analysis Method (GEOSLAM) Python package is a translation of the Seismo-Lineament Analysis Method (SLAM) mathematica code developed by Vince Cronin. The purpose of this package is to make SLAM available to those who are interested in SLAM, but are more comfortable using Python. _For clarification, GEOSLAM is the python package for the SLAM process._
 
 _From [Vince Cronin's website](https://croninprojects.org/Vince/SLAM/index.htm):_
 
