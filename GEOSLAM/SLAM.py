@@ -115,7 +115,7 @@ class DEM:
         display(Markdown('##### Processing...'))
         
         zone = utm.from_latlon(self.latitude, self.longitude)[2]
-        src1 = rio.vrt.WarpedVRT(src, crs=f'EPSG:326{str(zone)}')
+        src1 = rio.vrt.WarpedVRT(src, crs=f'EPSG:327{str(zone)}')
         cellsize = (src.transform[0] * (111132.0894 * math.cos(np.deg2rad(self.latitude))))
         bounds = src.bounds
         
