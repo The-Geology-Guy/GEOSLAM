@@ -14,6 +14,7 @@ from .geodesy import lonlat_to_utm, utm_to_lonlat
 from .orientation import plane_normal, slip_vector
 
 SLAB_STYLE = {"GS": ":", "GL": ":", "SS": "--", "SL": "--", "SM": "-.", "Mean": "-", "MThin": "-"}
+"""Optional dash patterns per plane, used only with ``trace_style="dashed"``."""
 
 
 def light_azimuth(result) -> float:
@@ -57,10 +58,14 @@ def beachball_image(strike, dip, rake, n=201):
 
 def plot_slam(result, ax=None, faults=None, show_slabs=True, show_hillshade=True,
               aftershocks=None, beachball=True, title=None, km=True, fault_color="#d62728",
-              swath_color="#1f77b4", light_altitude=15.0):
+              swath_color="#1f77b4", light_altitude=15.0, trace_style="solid"):
     """Map of one SLAM result.  ``faults`` is the output of
     :func:`geoslam.sources.faults.faults_in_box`; ``aftershocks`` an (N, 2+)
-    array of lon, lat[, magnitude]."""
+    array of lon, lat[, magnitude].
+
+    All lines are drawn solid by default.  ``trace_style="dashed"`` restores
+    per-plane dash patterns (dotted = gentle, dashed = steep, dash-dot = SM).
+    """
     import matplotlib.pyplot as plt
 
     dem = result.dem
@@ -73,17 +78,35 @@ def plot_slam(result, ax=None, faults=None, show_slabs=True, show_hillshade=True
                   extent=ext, origin="upper", interpolation="bilinear")
     x, y = dem.xy()
     X, Y = np.meshgrid(x * s, y * s)
-    ax.contourf(X, Y, result.swath.astype(float), levels=[0.5, 1.5], colors=[swath_color], alpha=0.25)
-    ax.contour(X, Y, result.swath.astype(float), levels=[0.5], colors=[swath_color], linewidths=2.0)
+    widths = {p_.name: p_.half_width for p_ in result.planes}
+    if result.method == "cronin" and result.signed_distances:
+        # Each slab is the band -h <= n.P <= h of a smooth field, so contouring the field
+        # itself gives continuous, sub-cell lines even for slabs thinner than one DEM cell.
+        bands = [("MThin", result.mean_signed_distance)] + list(result.signed_distances.items())
+        for name, sd in bands:
+            h = widths[name]
+            sdf = np.nan_to_num(sd)
+            ax.contourf(X, Y, sdf, levels=[-h, h], colors=[swath_color], alpha=0.25)
+            ax.contour(X, Y, sdf, levels=[-h, h], colors=[swath_color], linewidths=1.6,
+                       linestyles="solid")
+    elif result.margin is not None:
+        m = np.nan_to_num(result.margin, nan=1e9)
+        ax.contourf(X, Y, m, levels=[np.nanmin(m) - 1.0, 0.0], colors=[swath_color], alpha=0.25)
+        ax.contour(X, Y, m, levels=[0.0], colors=[swath_color], linewidths=2.0, linestyles="solid")
+    else:
+        ax.contourf(X, Y, result.swath.astype(float), levels=[0.5, 1.5], colors=[swath_color], alpha=0.25)
+        ax.contour(X, Y, result.swath.astype(float), levels=[0.5], colors=[swath_color], linewidths=2.0,
+                   linestyles="solid")
     if show_slabs:
         # ground traces of Cronin's bounding planes (gentle/steep x smaller/larger azimuth)
         for name, sd in result.signed_distances.items():
             if name == "Mean":
                 continue
             ax.contour(X, Y, np.nan_to_num(sd), levels=[0.0], colors=["k"],
-                       linewidths=0.7, linestyles=SLAB_STYLE.get(name, "-"), alpha=0.55)
+                       linewidths=0.7, alpha=0.55,
+                       linestyles=SLAB_STYLE.get(name, "-") if trace_style == "dashed" else "solid")
     ax.contour(X, Y, np.nan_to_num(result.mean_signed_distance), levels=[0.0], colors=["k"],
-               linewidths=1.8)
+               linewidths=1.8, linestyles="solid")
     if faults:
         for f in faults:
             for line in f["lines"]:

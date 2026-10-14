@@ -90,6 +90,9 @@ class SLAMResult:
     mean_signed_distance: np.ndarray  # n0 . P for the mean plane (m); its 0-contour is the trace
     params: dict = field(default_factory=dict)
     signed_distances: dict[str, np.ndarray] = field(default_factory=dict, repr=False)
+    margin: np.ndarray | None = field(default=None, repr=False)
+    """Continuous field (m): negative inside the swath, positive outside.  Its 0-contour
+    is a sub-cell, smooth version of the swath boundary (used for plotting)."""
 
     # ------------------------------------------------------------ geometry
     @property
@@ -239,16 +242,21 @@ def seismo_lineament(dem: DEMGrid, hypocenter: Hypocenter, plane: NodalPlane,
         swath = np.zeros(shape, bool)
         for m in slabs.values():
             swath |= m
+        margin = np.abs(mean_sd) - thin_w
+        for ps in planes[1:]:
+            margin = np.minimum(margin, np.abs(signed[ps.name]) - ps.half_width)
     elif method == "envelope":
-        swath = _envelope(Pf, dip0, az0, sd, sa, half_width, angular_step, chunk).reshape(shape)
-        swath |= slabs["MThin"]
+        env, margin = _envelope(Pf, dip0, az0, sd, sa, half_width, angular_step, chunk)
+        swath = env.reshape(shape) | slabs["MThin"]
+        margin = np.minimum(margin.reshape(shape), np.abs(mean_sd) - thin_w)
     else:
         raise ValueError("method must be 'envelope' or 'cronin'")
 
     swath &= valid.reshape(shape)
     return SLAMResult(dem, hypocenter, plane, method, gamma, focus, planes, swath, slabs,
                       mean_sd, dict(width_factor=width_factor, multiplier=multiplier,
-                                    angular_step=angular_step, grid_dip_azimuth=az0), signed)
+                                    angular_step=angular_step, grid_dip_azimuth=az0), signed,
+                      np.where(valid.reshape(shape), margin, np.nan))
 
 
 def _rect_boundary(d0, a0, sd, sa, step):
@@ -284,11 +292,14 @@ def _envelope(Pf, d0, a0, sd, sa, half_width, step, chunk):
     normals = plane_normal(samples[:, 0], samples[:, 1])   # (K, 3)
     widths = np.atleast_1d(half_width(normals))            # (K,)
     out = np.zeros(len(Pf), bool)
+    margin = np.zeros(len(Pf))
+    hmin = float(widths.min())
     d_lo, d_hi = d0 - sd, d0 + sd
     for s in range(0, len(Pf), chunk):
         p = Pf[s:s + chunk]
         f = p @ normals.T                                    # (m, K)
-        inside = np.any(np.abs(f) <= widths, axis=1)
+        slab_margin = np.min(np.abs(f) - widths, axis=1)
+        inside = slab_margin <= 0.0
         fmin, fmax = f.min(axis=1), f.max(axis=1)
         # interior critical points of f: n parallel to +/-P (f = +/-|P|)
         r = np.linalg.norm(p, axis=1)
@@ -306,7 +317,10 @@ def _envelope(Pf, d0, a0, sd, sa, half_width, step, chunk):
             fmin, fmax = np.minimum(fmin, -p[:, 2]), np.maximum(fmax, -p[:, 2])
         crosses = (fmin <= 0.0) & (fmax >= 0.0)
         out[s:s + chunk] = inside | crosses
-    return out
+        # smooth margin: outside the crossing region it is the distance beyond the
+        # nearest bounding slab; inside, depth into the crossing region (offset by -h)
+        margin[s:s + chunk] = np.where(crosses, -np.minimum(fmax, -fmin) - hmin, slab_margin)
+    return out, margin
 
 
 def suggest_half_extent(hypocenter: Hypocenter, plane: NodalPlane, mean_elevation_m=0.0,
