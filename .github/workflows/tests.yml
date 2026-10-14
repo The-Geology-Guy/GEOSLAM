@@ -1,0 +1,32 @@
+name: tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[test,tables]"
+      - run: pytest -v
+  live-services:
+    # exercises ComCat, NCEDC, USGS 3DEP and Qfaults over the network
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - run: pytest -v -m network
+        env:
+          GEOSLAM_NETWORK_TESTS: "1"
+      - run: geoslam run nc72282711 --out live_napa --cellsize 30 --half-extent-km 12
+      - uses: actions/upload-artifact@v4
+        with:
+          name: live-napa
+          path: live_napa/
