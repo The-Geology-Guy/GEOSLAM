@@ -349,34 +349,39 @@ async function onFile(e) {
   setStatus(`${f.name} ready (${(f.size / 1e6).toFixed(1)} MB).`, "ok");
 }
 
+/* Fetch a USGS 3DEP grid for a plan (UTM bbox + size) and install it as the current DEM. */
+async function fetch3dep(plan) {
+  const [n, m] = plan.size;
+  const p = new URLSearchParams({ bbox: plan.bbox.join(","), bboxSR: plan.epsg, imageSR: plan.epsg, size: `${n},${m}`,
+    format: "bsq", pixelType: "F32", interpolation: "RSP_BilinearInterpolation", noDataInterpretation: "esriNoDataMatchAny", f: "image" });
+  const r = await fetch(`${THREEDEP}?${p}`);
+  if (!r.ok) throw new Error(`USGS 3DEP did not return terrain (HTTP ${r.status}). Try again, or upload your own DEM.`);
+  // Raw band-sequential float32 grid (row 0 = north) followed by a 1-bit validity mask.
+  // (The service's GeoTIFF output omits empty tiles, which breaks TIFF readers.)
+  const raw = await r.arrayBuffer();
+  const w = n, h = m, cells = n * m;
+  if (raw.byteLength < cells * 4) throw new Error("USGS 3DEP returned an incomplete terrain grid. Try again in a moment.");
+  const data = new Float32Array(raw.slice(0, cells * 4));
+  const mask = raw.byteLength >= cells * 4 + Math.ceil(cells / 8) ? new Uint8Array(raw, cells * 4, Math.ceil(cells / 8)) : null;
+  let valid = 0;
+  for (let i = 0; i < cells; i++) {
+    const v = data[i];
+    const ok = !(v < -1e4 || v > 1e5 || Number.isNaN(v)) && (!mask || (mask[i >> 3] >> (7 - (i & 7))) & 1);
+    if (ok) valid++; else data[i] = NaN;
+  }
+  if (valid < 0.5 * cells) throw new Error("USGS 3DEP has little or no elevation data here (it covers the United States). Choose “My own DEM” and upload a GeoTIFF.");
+  const cs = (plan.bbox[2] - plan.bbox[0]) / w;
+  busyText("Preparing terrain");
+  return JSON.parse(await rpc("setDemUtm", [data, h, w, plan.bbox[0], plan.bbox[3], cs, plan.epsg, "USGS 3DEP"], [data.buffer]));
+}
+
 async function ensureDem() {
   const src = demSource();
   const key = src === "3dep" ? `3dep:${S.plan.epsg}:${S.plan.bbox}:${S.plan.cellsize}` : `up:${S.upload?.name}:${S.plan.bbox}:${$("#ascii-zone-n").value}${$("#ascii-hemi").value}`;
   if (S.demKey === key) return;
   if (src === "3dep") {
     busy(true, "Fetching terrain from USGS 3DEP");
-    const [n, m] = S.plan.size;
-    const p = new URLSearchParams({ bbox: S.plan.bbox.join(","), bboxSR: S.plan.epsg, imageSR: S.plan.epsg, size: `${n},${m}`,
-      format: "bsq", pixelType: "F32", interpolation: "RSP_BilinearInterpolation", noDataInterpretation: "esriNoDataMatchAny", f: "image" });
-    const r = await fetch(`${THREEDEP}?${p}`);
-    if (!r.ok) throw new Error(`USGS 3DEP did not return terrain (HTTP ${r.status}). Try again, or upload your own DEM.`);
-    // Raw band-sequential float32 grid (row 0 = north) followed by a 1-bit validity mask.
-    // (The service's GeoTIFF output omits empty tiles, which breaks TIFF readers.)
-    const raw = await r.arrayBuffer();
-    const w = n, h = m, cells = n * m;
-    if (raw.byteLength < cells * 4) throw new Error("USGS 3DEP returned an incomplete terrain grid. Try again in a moment.");
-    const data = new Float32Array(raw.slice(0, cells * 4));
-    const mask = raw.byteLength >= cells * 4 + Math.ceil(cells / 8) ? new Uint8Array(raw, cells * 4, Math.ceil(cells / 8)) : null;
-    let valid = 0;
-    for (let i = 0; i < cells; i++) {
-      const v = data[i];
-      const ok = !(v < -1e4 || v > 1e5 || Number.isNaN(v)) && (!mask || (mask[i >> 3] >> (7 - (i & 7))) & 1);
-      if (ok) valid++; else data[i] = NaN;
-    }
-    if (valid < 0.5 * cells) throw new Error("USGS 3DEP has little or no elevation data here (it covers the United States). Choose “My own DEM” and upload a GeoTIFF.");
-    const cs = (S.plan.bbox[2] - S.plan.bbox[0]) / w;
-    busyText("Preparing terrain");
-    S.demInfo = JSON.parse(await rpc("setDemUtm", [data, h, w, S.plan.bbox[0], S.plan.bbox[3], cs, S.plan.epsg, "USGS 3DEP"], [data.buffer]));
+    S.demInfo = await fetch3dep(S.plan);
   } else {
     if (!S.upload) throw new Error("Choose a DEM file to upload, or switch to USGS 3DEP.");
     busy(true, "Reading your DEM");
@@ -401,6 +406,7 @@ async function ensureDem() {
     if (S.demInfo.valid_fraction < 0.3) throw new Error("Your DEM barely overlaps the area around this earthquake. Check its location and coordinate system.");
   }
   S.demKey = key;
+  await pycall("save_dem", "main");
   await drawHillshade();
 }
 
@@ -439,33 +445,39 @@ async function drawHillshade() {
 }
 
 /* ------------------------------------------------------------- context data */
+async function fetchFaults([w, s, e, n]) {
+  const feats = [];
+  for (let off = 0; off < 10000; off += 2000) {
+    const p = new URLSearchParams({ geometry: `${w},${s},${e},${n}`, geometryType: "esriGeometryEnvelope", inSR: "4326",
+      spatialRel: "esriSpatialRelIntersects", outFields: "fault_name,section_name,age,slip_sense,slip_rate", outSR: "4326",
+      maxAllowableOffset: "0.0001", geometryPrecision: "6", f: "geojson", resultOffset: off, resultRecordCount: 2000 });
+    const js = await fetchJSON(`${QFAULTS}?${p}`, "Fault database").catch(() => EMPTY);
+    feats.push(...(js.features || []));
+    if (!js.exceededTransferLimit && (js.features || []).length < 2000) break;
+  }
+  return { type: "FeatureCollection", features: feats };
+}
+async function fetchQuakes(ev, [w, s, e, n]) {
+  const t0 = new Date(ev.time);
+  const t1 = new Date(t0.getTime() + (+$("#seis-days").value || 0) * 864e5 + 6e4);
+  const p = new URLSearchParams({ format: "geojson", starttime: t0.toISOString(), endtime: t1.toISOString(),
+    minlatitude: s, maxlatitude: n, minlongitude: w, maxlongitude: e, minmagnitude: $("#seis-mag").value || "1.5", limit: "5000" });
+  const js = await fetchJSON(`${COMCAT}?${p}`, "Seismicity").catch(() => EMPTY);
+  return { type: "FeatureCollection", features: (js.features || []).filter((f) => f.id !== ev.id).map((f) => ({ type: "Feature", geometry: { type: "Point", coordinates: f.geometry.coordinates.slice(0, 2) }, properties: { mag: f.properties.mag } })) };
+}
+
 async function loadContext() {
-  const [w, s, e, n] = S.plan.lonlat_bounds;
   const fk = S.plan.lonlat_bounds.join();
   const tasks = [];
   if (S.faultsKey !== fk) tasks.push((async () => {
-    const feats = [];
-    for (let off = 0; off < 10000; off += 2000) {
-      const p = new URLSearchParams({ geometry: `${w},${s},${e},${n}`, geometryType: "esriGeometryEnvelope", inSR: "4326",
-        spatialRel: "esriSpatialRelIntersects", outFields: "fault_name,section_name,age,slip_sense,slip_rate", outSR: "4326",
-        maxAllowableOffset: "0.0001", geometryPrecision: "6", f: "geojson", resultOffset: off, resultRecordCount: 2000 });
-      const js = await fetchJSON(`${QFAULTS}?${p}`, "Fault database").catch(() => EMPTY);
-      feats.push(...(js.features || []));
-      if (!js.exceededTransferLimit && (js.features || []).length < 2000) break;
-    }
-    S.faults = { type: "FeatureCollection", features: feats }; S.faultsKey = fk;
+    S.faults = await fetchFaults(S.plan.lonlat_bounds); S.faultsKey = fk;
     await mapReady;
     setData("faults", S.faults);
   })());
   const ev = S.caseObj.event;
   const qk = `${fk}:${$("#seis-days").value}:${$("#seis-mag").value}`;
   if (ev.time && S.quakesKey !== qk) tasks.push((async () => {
-    const t0 = new Date(ev.time);
-    const t1 = new Date(t0.getTime() + (+$("#seis-days").value || 0) * 864e5 + 6e4);
-    const p = new URLSearchParams({ format: "geojson", starttime: t0.toISOString(), endtime: t1.toISOString(),
-      minlatitude: s, maxlatitude: n, minlongitude: w, maxlongitude: e, minmagnitude: $("#seis-mag").value || "1.5", limit: "5000" });
-    const js = await fetchJSON(`${COMCAT}?${p}`, "Seismicity").catch(() => EMPTY);
-    S.quakes = { type: "FeatureCollection", features: (js.features || []).filter((f) => f.id !== ev.id).map((f) => ({ type: "Feature", geometry: { type: "Point", coordinates: f.geometry.coordinates.slice(0, 2) }, properties: { mag: f.properties.mag } })) };
+    S.quakes = await fetchQuakes(ev, S.plan.lonlat_bounds);
     S.quakesKey = qk;
     await mapReady;
     setData("quakes", S.quakes);
@@ -628,6 +640,220 @@ $("#share").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(location.href); setStatus("Share link copied. Anyone who opens it recomputes this map.", "ok"); }
   catch { setStatus("Copy the link from the address bar to share this map.", "ok"); }
 });
+
+
+/* ------------------------------------------------------------------ report */
+// Events collected for a Cronin-style report figure; letters A, B, C… label them
+// and plane numbers complete the beachball / swath labels (A1, A2, B1…).
+S.report = [];
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function currentEntry(letter) {
+  const c = caseForRun(), m = c.mechanisms[S.mech];
+  return {
+    letter, title: c.event.title || c.event.id || "Entered earthquake",
+    case: { event: c.event, uncertainty: c.uncertainty }, mechanism: m,
+    method: method(), multiplier: +$("#mult").value, depth_datum: datum(),
+    assumed_location_m: c.uncertainty ? null : [num("#a-eh") || 2000, num("#a-ez") || 2000],
+    planes: { np1: S.layers.NP1 !== false, np2: S.layers.NP2 !== false },
+  };
+}
+function nextLetter() {
+  const used = new Set(S.report.map((e) => e.letter));
+  return [...LETTERS].find((l) => !used.has(l)) || "Z";
+}
+function reportEntries() { return S.report.length ? S.report : (S.caseObj && S.results ? [currentEntry("A")] : []); }
+function reportItems() {
+  const items = [];
+  for (const e of reportEntries())
+    ["np1", "np2"].forEach((k, i) => {
+      if (!e.planes[k]) return;
+      items.push({ label: `${e.letter}${i + 1}`, event_label: e.letter, case: e.case, plane: e.mechanism[k],
+        method: e.method, multiplier: e.multiplier, depth_datum: e.depth_datum,
+        assumed_location_m: e.assumed_location_m, source: e.mechanism.label || "" });
+    });
+  return items;
+}
+
+function renderReportList() {
+  const ol = $("#rep-list");
+  ol.innerHTML = "";
+  S.report.forEach((e, idx) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<input class="letter" maxlength="3" value="${esc(e.letter)}" aria-label="Label">
+      <span class="title" title="${esc(e.title)}">${esc(e.title)}</span>
+      <label class="toggle"><input type="checkbox" data-k="np1" ${e.planes.np1 ? "checked" : ""}> 1</label>
+      <label class="toggle"><input type="checkbox" data-k="np2" ${e.planes.np2 ? "checked" : ""}> 2</label>
+      <button type="button" class="rm" aria-label="Remove">×</button>`;
+    li.querySelector(".letter").addEventListener("change", (ev) => { e.letter = ev.target.value.trim() || nextLetter(); ev.target.value = e.letter; });
+    li.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.addEventListener("change", () => { e.planes[cb.dataset.k] = cb.checked; }));
+    li.querySelector(".rm").addEventListener("click", () => { S.report.splice(idx, 1); renderReportList(); });
+    ol.appendChild(li);
+  });
+  $("#rep-add").textContent = S.report.length ? "Add this earthquake too" : "Add this earthquake to the report";
+}
+$("#rep-add").addEventListener("click", () => {
+  if (!S.results) return;
+  const e = currentEntry(nextLetter());
+  const dup = S.report.findIndex((x) => x.case.event.id && x.case.event.id === e.case.event.id && x.mechanism.label === e.mechanism.label);
+  if (dup >= 0) { e.letter = S.report[dup].letter; S.report[dup] = e; setStatus(`Updated ${e.letter} in the report.`, "ok"); }
+  else { S.report.push(e); setStatus(`Added as ${e.letter}. Load another earthquake and add it too, or open the report view.`, "ok"); }
+  renderReportList();
+});
+
+function reportOptions() {
+  const o = {
+    title: $("#r-title").value.trim(), terrain: $("#r-terrain").value, light: $("#r-light").value,
+    light_azimuth: +$("#r-az").value || 315, light_altitude: +$("#r-alt").value, exaggeration: +$("#r-ex").value,
+    page: $("#r-page").value,
+  };
+  $$("#rep-form [data-opt]").forEach((cb) => { o[cb.dataset.opt] = cb.checked; });
+  return o;
+}
+
+// Report terrain: one 3DEP grid covering every event in the report (kept in its own
+// slot in Python so the analysis DEM is restored afterwards without re-fetching).
+let repQueue = Promise.resolve();
+function withReportDem(fn) {
+  const job = repQueue.then(async () => {
+    await pyReady;
+    const entries = reportEntries();
+    if (!entries.length) throw new Error("Map an earthquake first.");
+    const cases = entries.map((e) => ({ ...e.case, mechanisms: [e.mechanism] }));
+    const plan = JSON.parse(await pycall("report_plan", JSON.stringify(cases), num("#r-half"), null, +$("#r-cells").value));
+    try {
+      if (demSource() === "3dep") {
+        const key = `${plan.epsg}:${plan.bbox}:${plan.cellsize}`;
+        if (S.repDemKey !== key) {
+          setRepMsg("Fetching terrain for the report from USGS 3DEP…");
+          await fetch3dep(plan);
+          await pycall("save_dem", "report");
+          S.repDemKey = key;
+        } else await pycall("load_dem", "report");
+      } else {
+        // uploaded DEM: the report uses the analysis grid as loaded
+        await pycall("load_dem", "main");
+        const info = JSON.parse(await pycall("_dem_info"));
+        const lo = info.corners.map((c) => c[0]), la = info.corners.map((c) => c[1]);
+        plan.lonlat_bounds = [Math.min(...lo), Math.min(...la), Math.max(...lo), Math.max(...la)];
+      }
+      return await fn(plan);
+    } finally {
+      await pycall("load_dem", "main");
+    }
+  });
+  repQueue = job.catch(() => {});
+  return job;
+}
+
+const repCache = {};
+async function reportContext(plan, opt) {
+  const ctx = { faults: null, quakes: null };
+  const fk = plan.lonlat_bounds.map((v) => v.toFixed(4)).join();
+  if (opt.faults) {
+    if (repCache.fk !== fk) { setRepMsg("Fetching mapped faults…"); repCache.faults = await fetchFaults(plan.lonlat_bounds); repCache.fk = fk; }
+    ctx.faults = [];
+    for (const f of repCache.faults.features) {
+      const g = f.geometry; if (!g) continue;
+      const lines = g.type === "LineString" ? [g.coordinates] : g.type === "MultiLineString" ? g.coordinates : [];
+      for (const l of lines) ctx.faults.push(l.map((c) => [c[0], c[1]]));
+    }
+  }
+  if (opt.seismicity) {
+    const evs = reportEntries().map((e) => e.case.event).filter((ev) => ev.time);
+    const qk = `${fk}:${evs.map((e) => e.id || e.time)}:${$("#seis-days").value}:${$("#seis-mag").value}`;
+    if (repCache.qk !== qk) {
+      setRepMsg("Fetching seismicity…");
+      const sets = await Promise.all(evs.map((ev) => fetchQuakes(ev, plan.lonlat_bounds)));
+      repCache.quakes = sets.flatMap((fc) => fc.features.map((f) => [f.geometry.coordinates[0], f.geometry.coordinates[1], f.properties.mag ?? 1]));
+      repCache.qk = qk;
+    }
+    ctx.quakes = repCache.quakes;
+  }
+  return ctx;
+}
+
+let mplLoaded = null;
+const ensureMpl = () => (mplLoaded ||= (async () => { await pyReady; setRepMsg("Loading the plotting library (first time only)…"); await rpc("loadMpl"); })());
+
+function setRepMsg(t) { $("#rep-msg").textContent = t || ""; }
+
+async function renderReport(fmt, dpi) {
+  await ensureMpl();
+  const items = reportItems();
+  if (!items.length) throw new Error("Tick at least one nodal plane in the report list.");
+  return withReportDem(async (plan) => {
+    const opt = reportOptions();
+    Object.assign(opt, await reportContext(plan, opt), { fmt, dpi });
+    setRepMsg(fmt === "png" && dpi < 150 ? "Drawing the preview…" : "Drawing the report…");
+    return rpc("bytes", ["report_render", JSON.stringify(items), JSON.stringify(opt)]);
+  });
+}
+
+let previewTimer = null, previewUrl = null;
+function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(updatePreview, 400); }
+async function updatePreview() {
+  const box = $(".rep-preview");
+  box.classList.add("loading");
+  try {
+    const bytes = await renderReport("png", 90);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+    $("#rep-img").src = previewUrl;
+    setRepMsg("");
+  } catch (e) {
+    console.error(e.detail || e);
+    setRepMsg(e.message);
+  } finally { box.classList.remove("loading"); }
+}
+
+const reportName = () => "geoslam_report_" + (reportEntries().map((e) => e.case.event.id || e.letter).join("_") || "map");
+$("#rep-open").addEventListener("click", () => {
+  if (!S.results) return;
+  $("#dlg-report").showModal();
+  updatePreview();
+});
+$("#rep-form").addEventListener("input", (e) => {
+  if (e.target.id === "r-alt") $("#r-alt-o").textContent = e.target.value + "°";
+  if (e.target.id === "r-ex") $("#r-ex-o").textContent = e.target.value + "×";
+  if (e.target.id === "r-light") $("#r-az").disabled = e.target.value !== "custom";
+  if (e.target.id === "r-fmt" || e.target.id === "r-title") { if (e.target.id === "r-title") schedulePreview(); return; }
+  schedulePreview();
+});
+
+async function guarded(btn, fn) {
+  btn.disabled = true;
+  try { await fn(); } catch (e) { console.error(e.detail || e); setRepMsg(e.message); } finally { btn.disabled = false; }
+}
+$("#r-dl").addEventListener("click", (ev) => guarded(ev.target, async () => {
+  const [fmt, dpi] = $("#r-fmt").value.split(":");
+  const bytes = await renderReport(fmt, +(dpi || 300));
+  const type = { png: "image/png", pdf: "application/pdf", svg: "image/svg+xml" }[fmt];
+  download(`${reportName()}.${fmt}`, new Blob([bytes], { type }));
+  setRepMsg("Report downloaded.");
+}));
+async function terrainLightAzimuth() {
+  const o = reportOptions();
+  if (o.light === "nw") return 315;
+  if (o.light === "custom") return o.light_azimuth;
+  const it = reportItems()[0];
+  return it ? +(await pycall("report_light_azimuth", JSON.stringify(it))) : 315;
+}
+$("#r-dl-terrain").addEventListener("click", (ev) => guarded(ev.target, async () => {
+  await ensureMpl();
+  const o = reportOptions();
+  const bytes = await withReportDem(async () => {
+    const az = await terrainLightAzimuth();
+    return rpc("bytes", ["terrain_zip", `${reportName()}_terrain`, o.terrain === "none" ? "hillshade" : o.terrain, az, o.light_altitude, o.exaggeration]);
+  });
+  download(`${reportName()}_terrain.zip`, new Blob([bytes], { type: "application/zip" }));
+  setRepMsg("Terrain image downloaded (PNG with world file and projection).");
+}));
+$("#r-dl-dem").addEventListener("click", (ev) => guarded(ev.target, async () => {
+  const bytes = await withReportDem(() => rpc("bytes", ["dem_zip", `${reportName()}_dem`]));
+  download(`${reportName()}_dem.zip`, new Blob([bytes], { type: "application/zip" }));
+  setRepMsg("DEM downloaded (Esri ASCII grid with projection).");
+}));
 
 /* ------------------------------------------------------------- share links */
 function writeHash() {

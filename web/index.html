@@ -170,11 +170,20 @@
     <section id="results" class="results" hidden>
       <h2>Results</h2>
       <div id="plane-results"></div>
+      <div class="report-box">
+        <h3>Report figure</h3>
+        <p class="hint">A publication-style map in the style of Cronin's SLAM figures: terrain fills the frame, latitude and longitude on every edge, and each beachball is labelled (A1, A2…). Add several earthquakes to show them on one map.</p>
+        <ol id="rep-list" class="rep-list"></ol>
+        <div class="exports">
+          <button type="button" class="btn small" id="rep-add">Add this earthquake to the report</button>
+          <button type="button" class="btn small strong" id="rep-open">Report view &amp; download…</button>
+        </div>
+      </div>
       <div class="exports">
         <button type="button" class="btn small" id="share">Copy share link</button>
         <button type="button" class="btn small" id="dl-geojson">GeoJSON</button>
         <button type="button" class="btn small" id="dl-kml">KML</button>
-        <button type="button" class="btn small" id="dl-png">Map image</button>
+        <button type="button" class="btn small" id="dl-png">Screenshot</button>
         <button type="button" class="btn small" id="dl-txt">Summary</button>
       </div>
       <p class="hint">A fault is a candidate when it lies inside a seismo-lineament <em>and</em> its orientation and slip agree with that nodal plane. Check both planes: the focal mechanism alone cannot tell the fault from the auxiliary plane.</p>
@@ -225,6 +234,81 @@
   <h3>Reading the result</h3>
   <p>The terrain is lit from opposite the dip direction at a low sun angle, which brings out scarps facing along the fault. A mapped fault is a candidate when it lies within a seismo-lineament and its orientation and slip match that plane. SLAM narrows the search; geomorphology, seismicity and fieldwork decide.</p>
   <p class="muted">Full derivation and references: <a href="https://github.com/The-Geology-Guy/GEOSLAM/blob/main/docs/METHOD.md" target="_blank" rel="noopener">docs/METHOD.md</a>. Cronin, V.S., et al., 2008, <em>Environmental &amp; Engineering Geoscience</em> 14(3):199–219.</p>
+</dialog>
+
+<dialog id="dlg-report" class="dlg wide">
+  <form method="dialog"><button class="dlg-close" aria-label="Close">×</button></form>
+  <h2>Report view</h2>
+  <div class="rep-layout">
+    <div class="rep-preview">
+      <div id="rep-img-wrap"><img id="rep-img" alt="Report figure preview"><p id="rep-msg" class="hint"></p></div>
+    </div>
+    <form id="rep-form" class="rep-opts" onsubmit="return false">
+      <label class="field"><span>Title</span><input type="text" id="r-title" placeholder="optional"></label>
+      <label class="field"><span>Terrain</span>
+        <select id="r-terrain">
+          <option value="hillshade">Grey hillshade (Cronin)</option>
+          <option value="hillshade-color">Hillshade with elevation colours</option>
+          <option value="elevation">Elevation colours</option>
+          <option value="slope">Slope</option>
+          <option value="none">None</option>
+        </select></label>
+      <div class="grid2">
+        <label class="field"><span>Light from</span>
+          <select id="r-light">
+            <option value="plane">Opposite the dip (Cronin)</option>
+            <option value="nw">Northwest (315°)</option>
+            <option value="custom">Custom azimuth</option>
+          </select></label>
+        <label class="field"><span>Azimuth (°)</span><input type="number" id="r-az" min="0" max="360" value="315" disabled></label>
+        <label class="field range"><span>Sun altitude <output id="r-alt-o">15°</output></span><input type="range" id="r-alt" min="5" max="60" value="15"></label>
+        <label class="field range"><span>Vertical exaggeration <output id="r-ex-o">2×</output></span><input type="range" id="r-ex" min="1" max="5" step="0.5" value="2"></label>
+      </div>
+      <fieldset class="sub checks">
+        <legend>Show</legend>
+        <label><input type="checkbox" data-opt="swath_fill" checked> Lineament fill</label>
+        <label><input type="checkbox" data-opt="swath_edges" checked> Lineament edges</label>
+        <label><input type="checkbox" data-opt="mean_trace" checked> Mean-plane trace</label>
+        <label><input type="checkbox" data-opt="bounding_traces"> Bounding-plane traces</label>
+        <label><input type="checkbox" data-opt="faults" checked> Quaternary faults</label>
+        <label><input type="checkbox" data-opt="seismicity"> Seismicity</label>
+        <label><input type="checkbox" data-opt="beachballs" checked> Beachballs</label>
+        <label><input type="checkbox" data-opt="labels" checked> Labels (A1…)</label>
+        <label><input type="checkbox" data-opt="graticule" checked> Lat/lon on edges</label>
+        <label><input type="checkbox" data-opt="scale_bar" checked> Scale bar</label>
+        <label><input type="checkbox" data-opt="north_arrow" checked> North arrow</label>
+        <label><input type="checkbox" data-opt="legend"> Legend</label>
+        <label><input type="checkbox" data-opt="details"> Details table</label>
+      </fieldset>
+      <div class="grid2">
+        <label class="field"><span>Map half-width (km)</span><input type="number" id="r-half" min="3" max="80" step="1" placeholder="auto"></label>
+        <label class="field"><span>Terrain detail</span>
+          <select id="r-cells"><option value="800">Standard</option><option value="1200" selected>High</option><option value="2000">Very high (slow)</option></select></label>
+        <label class="field"><span>Page</span>
+          <select id="r-page">
+            <option value="map">Fit to map</option>
+            <option value="letter-portrait">Letter, portrait</option>
+            <option value="letter-landscape">Letter, landscape</option>
+            <option value="a4-portrait">A4, portrait</option>
+            <option value="a4-landscape">A4, landscape</option>
+            <option value="square">Square</option>
+          </select></label>
+        <label class="field"><span>File</span>
+          <select id="r-fmt">
+            <option value="png:300">PNG, 300 dpi</option>
+            <option value="png:600">PNG, 600 dpi</option>
+            <option value="pdf">PDF (vector)</option>
+            <option value="svg">SVG (vector)</option>
+          </select></label>
+      </div>
+      <div class="exports">
+        <button type="button" class="btn small strong" id="r-dl">Download report</button>
+        <button type="button" class="btn small" id="r-dl-terrain">Terrain image</button>
+        <button type="button" class="btn small" id="r-dl-dem">DEM (ASCII grid)</button>
+      </div>
+      <p class="hint">Terrain image and DEM are cut to the report's map frame and come with .pgw/.prj files, so they open georeferenced in QGIS or ArcGIS. The ASCII grid is the format Cronin's SLAMcode reads.</p>
+    </form>
+  </div>
 </dialog>
 
 <dialog id="dlg-about" class="dlg">

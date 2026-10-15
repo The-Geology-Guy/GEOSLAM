@@ -66,6 +66,15 @@ const handlers = {
   setDemUtm: ([buf, ...rest]) => py.globals.get("_set_dem_utm")(buf, ...rest),
   setDemGeo: ([buf, ...rest]) => py.globals.get("_set_dem_geo")(buf, ...rest),
   setDemAscii: ([text, zone, north]) => py.pyimport("geoslam.web").set_dem_ascii(text, zone, north),
+  // geoslam.web.<fn>(*args) returning Python bytes -> Uint8Array
+  bytes: ([fn, ...args]) => {
+    const r = py.pyimport("geoslam.web")[fn](...args);
+    const out = r.toJs();
+    r.destroy();
+    return out;
+  },
+  // matplotlib is only needed for report figures, so load it on first use
+  loadMpl: async () => { await py.loadPackage(["matplotlib"]); return true; },
   hillshade: ([az, alt]) => bytesOf(py.globals.get("_hillshade")(az, alt)),
   beachball: ([s, d, r, n]) => bytesOf(py.globals.get("_beachball")(s, d, r, n)),
 };
@@ -74,7 +83,7 @@ self.onmessage = async (ev) => {
   const { id, op, args } = ev.data;
   try {
     const result = await handlers[op](args || []);
-    const transfer = result instanceof Uint8ClampedArray ? [result.buffer] : [];
+    const transfer = ArrayBuffer.isView(result) ? [result.buffer] : [];
     self.postMessage({ id, ok: true, result }, transfer);
   } catch (err) {
     let msg = String(err && err.message ? err.message : err);

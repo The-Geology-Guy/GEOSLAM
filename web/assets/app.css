@@ -193,3 +193,28 @@ fieldset.sub > label, .choice > label, .check { display: block; font-size: 0.9re
   .grid3, .grid4 { grid-template-columns: 1fr 1fr; }
   .map-tools { max-width: 200px; }
 }
+
+/* report */
+.report-box { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin: 12px 0; }
+.report-box h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.btn.strong { background: var(--ink); color: var(--panel); }
+.btn.strong:hover { background: var(--ink); filter: brightness(1.25); }
+.rep-list { list-style: none; padding: 0; margin: 6px 0; }
+.rep-list:empty { display: none; }
+.rep-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 0.85rem; flex-wrap: wrap; }
+.rep-list li:first-child { border-top: 0; }
+.rep-list .letter { width: 2.4em; font-weight: 700; text-align: center; background: var(--field); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; color: var(--ink); }
+.rep-list .title { flex: 1 1 140px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-list .rm { background: none; border: 0; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
+.dlg.wide { max-width: 1180px; }
+.rep-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; align-items: start; }
+.rep-preview { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); min-height: 360px; display: flex; align-items: center; justify-content: center; position: relative; }
+#rep-img-wrap { width: 100%; text-align: center; }
+#rep-img { max-width: 100%; max-height: 74vh; display: block; margin: 0 auto; }
+#rep-img:not([src]) { display: none; }
+#rep-msg { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; margin: 0; color: #4a5562; }
+.rep-preview.loading #rep-img { opacity: 0.45; }
+.rep-opts .grid2 { gap: 0 10px; }
+fieldset.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; }
+fieldset.checks > label { margin: 3px 0; font-size: 0.85rem; }
+@media (max-width: 860px) { .rep-layout { grid-template-columns: 1fr; } }

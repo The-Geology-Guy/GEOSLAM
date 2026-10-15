@@ -332,3 +332,202 @@ def run(case_json: str, options_json: str) -> str:
             polygons=_polygons(r), traces=traces, summary=r.summary(),
             location_uncertainty=(unc or unknown).source if (unc or unknown) else "none"))
     return json.dumps(out)
+
+
+# --------------------------------------------------------------------- report
+_DEM_SLOTS: dict[str, DEMGrid] = {}
+
+
+def save_dem(slot: str) -> bool:
+    """Keep the current DEM under a name (so a report DEM can be fetched and the
+    analysis DEM restored afterwards without re-downloading it)."""
+    if _DEM is None:
+        return False
+    _DEM_SLOTS[slot] = _DEM
+    return True
+
+
+def load_dem(slot: str) -> str:
+    global _DEM
+    if slot not in _DEM_SLOTS:
+        return ""
+    _DEM = _DEM_SLOTS[slot]
+    return _dem_info()
+
+
+def report_plan(cases_json: str, half_extent_km=None, cellsize=None, max_cells=1200,
+                margin_km=None) -> str:
+    """One map frame covering every event in a report.
+
+    Each event gets the square ``dem_plan`` would give it (or ``half_extent_km``);
+    the frame is the union of those squares in the UTM zone of their centroid.
+    """
+    cases = json.loads(cases_json)
+    if not cases:
+        raise ValueError("no events in the report")
+    lons = [c["event"]["lon"] for c in cases]
+    lats = [c["event"]["lat"] for c in cases]
+    zone = utm_zone(float(np.mean(lons)), float(np.mean(lats)))
+    boxes = []
+    for c in cases:
+        p = json.loads(dem_plan(json.dumps(c), half_extent_km, 100.0))
+        half = (p["bbox"][2] - p["bbox"][0]) / 2
+        if margin_km is not None and len(cases) > 1:
+            half = float(margin_km) * 1000
+        e, n, _ = lonlat_to_utm(c["event"]["lon"], c["event"]["lat"], zone)
+        boxes.append([float(e) - half, float(n) - half, float(e) + half, float(n) + half])
+    b = np.array(boxes)
+    x0, y0, x1, y1 = b[:, 0].min(), b[:, 1].min(), b[:, 2].max(), b[:, 3].max()
+    if not cellsize:
+        cellsize = max(10.0, np.ceil(max(x1 - x0, y1 - y0) / max_cells / 10.0) * 10.0)
+    cellsize = float(cellsize)
+    x0, y0 = np.floor(x0 / cellsize) * cellsize, np.floor(y0 / cellsize) * cellsize
+    x1, y1 = np.ceil(x1 / cellsize) * cellsize, np.ceil(y1 / cellsize) * cellsize
+    box = [float(x0), float(y0), float(x1), float(y1)]
+    lo, la = utm_to_lonlat(np.array([x0, x1, x1, x0]), np.array([y0, y0, y1, y1]), zone)
+    return json.dumps(dict(epsg=zone.epsg, zone=zone.number, north=zone.north, bbox=box,
+                           cellsize=cellsize,
+                           size=[int(round((x1 - x0) / cellsize)), int(round((y1 - y0) / cellsize))],
+                           corners=_corners(zone, box),
+                           lonlat_bounds=[float(lo.min()), float(la.min()), float(lo.max()), float(la.max())]))
+
+
+def _report_result(item, dem):
+    case = item["case"]
+    ev = case["event"]
+    unc = _unc_from_dict(case.get("uncertainty"))
+    unknown = None
+    if unc is None and item.get("assumed_location_m"):
+        eh, ez = item["assumed_location_m"]
+        unknown = HypocenterUncertainty.isotropic_horizontal(float(eh), float(ez), source="assumed")
+    hyp = Hypocenter(ev["lon"], ev["lat"], ev["depth_km"], unc, item.get("depth_datum", "sea_level"),
+                     ev.get("id", ""), ev.get("time", "") or "", ev.get("mag"))
+    plane = _plane_from_dict(item["plane"], item.get("label", ""))
+    r = seismo_lineament(dem, hyp, plane, method=item.get("method", "envelope"),
+                         multiplier=float(item.get("multiplier", 1.0)), unknown_uncertainty=unknown,
+                         chunk=20000, angular_step=float(item.get("angular_step", 1.0)))
+    u = unc or unknown
+    loc = ""
+    if u is not None:
+        a = sorted(float(v) for v in u.semi_axes)
+        loc = f"{a[-1]:.0f}/{a[1]:.0f}/{a[0]:.0f} m" + (" (assumed)" if unc is None else "")
+    details = dict(date=(ev.get("time") or "")[:19].replace("T", " "),
+                   mag=f"{ev['mag']:.1f}" if ev.get("mag") is not None else "",
+                   location_unc=loc, source=item.get("source", ""))
+    return r, details
+
+
+def report_render(items_json: str, options_json: str) -> bytes:
+    """Render a Cronin-style report figure of the current DEM; returns file bytes.
+
+    ``items``: [{label, event_label, case, plane, method, multiplier, depth_datum,
+    assumed_location_m, source}].  ``options``: ReportOptions fields plus
+    ``faults`` (list of lon/lat polylines) and ``quakes`` ([[lon, lat, mag], ...]).
+    """
+    from .report import ReportItem, ReportOptions, render
+
+    if _DEM is None:
+        raise RuntimeError("no DEM loaded")
+    items, opt = json.loads(items_json), json.loads(options_json)
+    faults = [{"lines": [np.asarray(l, float)], "properties": {}} for l in (opt.pop("faults", None) or [])
+              if len(l) > 1]
+    quakes = opt.pop("quakes", None)
+    quakes = np.asarray(quakes, float) if quakes else None
+    known = ReportOptions.__dataclass_fields__
+    ro = ReportOptions(**{k: v for k, v in opt.items() if k in known})
+    ritems = []
+    for it in items:
+        r, details = _cached_result(it, _DEM)
+        ritems.append(ReportItem(it["label"], it["event_label"], r, it.get("color"), details))
+    return render(_DEM, ritems, ro, faults=faults, quakes=quakes)
+
+
+def terrain_png(style="hillshade", azimuth=315.0, altitude=15.0, exaggeration=2.0) -> bytes:
+    """The current DEM as a terrain image (one pixel per cell, north up)."""
+    from .report import terrain_image
+    return terrain_image(_DEM, style, float(azimuth), float(altitude), float(exaggeration))
+
+
+def world_file() -> str:
+    """ESRI world file (.pgw) for :func:`terrain_png` (pixel centres, UTM metres)."""
+    d = _DEM
+    c = d.cellsize
+    return f"{c:.6f}\n0.0\n0.0\n{-c:.6f}\n{d.x_min + c / 2:.3f}\n{d.y_max - c / 2:.3f}\n"
+
+
+def projection_wkt() -> str:
+    """ESRI .prj text for the current DEM's WGS84 / UTM zone."""
+    z = _DEM.zone
+    name = f"WGS_1984_UTM_Zone_{z.number}{'N' if z.north else 'S'}"
+    return (f'PROJCS["{name}",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,'
+            f'298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],'
+            f'PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],'
+            f'PARAMETER["False_Northing",{0.0 if z.north else 10000000.0}],'
+            f'PARAMETER["Central_Meridian",{z.central_meridian}],PARAMETER["Scale_Factor",0.9996],'
+            f'PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]')
+
+
+def dem_ascii() -> str:
+    """The current DEM as an Esri ASCII grid (Cronin's SLAM input format)."""
+    import os
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".asc", delete=False) as fh:
+        path = fh.name
+    try:
+        _DEM.to_arc_ascii(path)
+        with open(path) as fh:
+            return fh.read()
+    finally:
+        os.unlink(path)
+
+
+_RESULT_CACHE: dict = {}
+
+
+def _cached_result(item, dem):
+    key = (id(dem), json.dumps({k: v for k, v in item.items() if k not in ("label", "event_label", "color")},
+                               sort_keys=True))
+    if key not in _RESULT_CACHE:
+        if len(_RESULT_CACHE) > 24:
+            _RESULT_CACHE.clear()
+        _RESULT_CACHE[key] = _report_result(item, dem)
+    return _RESULT_CACHE[key]
+
+
+def _zip(files: dict) -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in files.items():
+            z.writestr(name, data)
+    return buf.getvalue()
+
+
+def terrain_zip(name="terrain", style="hillshade", azimuth=315.0, altitude=15.0, exaggeration=2.0) -> bytes:
+    """Terrain PNG with its world file (.pgw) and projection (.prj), ready for GIS."""
+    return _zip({f"{name}.png": terrain_png(style, azimuth, altitude, exaggeration),
+                 f"{name}.pgw": world_file(), f"{name}.prj": projection_wkt(),
+                 "README.txt": _readme("terrain image", style)})
+
+
+def dem_zip(name="dem") -> bytes:
+    """The DEM as an Esri ASCII grid (.asc + .prj), the format Cronin's SLAMcode reads."""
+    return _zip({f"{name}.asc": dem_ascii(), f"{name}.prj": projection_wkt(),
+                 "README.txt": _readme("elevation grid")})
+
+
+def _readme(what, style=""):
+    d = _DEM
+    z = d.zone
+    return (f"GEOSLAM {what}{' (' + style + ')' if style else ''}\n"
+            f"Source: {d.source}\nProjection: WGS 84 / UTM zone {z.number}{'N' if z.north else 'S'} "
+            f"(EPSG:{z.epsg})\nCell size: {d.cellsize:g} m; {d.shape[1]} columns x {d.shape[0]} rows\n"
+            f"Extent (m): x {d.x_min:.1f} to {d.x_max:.1f}, y {d.y_min:.1f} to {d.y_max:.1f}\n"
+            "Elevations in metres; NODATA -9999.\nMade with GEOSLAM, https://geoslam.org\n")
+
+
+def report_light_azimuth(item_json: str) -> float:
+    """Cronin's light direction (opposite the grid dip direction) for a report item."""
+    r, _ = _cached_result(json.loads(item_json), _DEM)
+    return float((r.params["grid_dip_azimuth"] + 180.0) % 360.0)
