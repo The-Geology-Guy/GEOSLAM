@@ -1,0 +1,41 @@
+name: web app
+on:
+  push:
+    branches: [main, web-app]
+    paths: ["web/**", "src/**", "pyproject.toml", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the GEOSLAM wheel for the browser
+        run: |
+          pip install build
+          python -m build --wheel --outdir _site/py
+          cp -r web/. _site/
+          WHEEL=$(ls _site/py/*.whl | xargs -n1 basename)
+          echo "{\"wheel\": \"$WHEEL\", \"commit\": \"$GITHUB_SHA\"}" > _site/py/manifest.json
+          cat _site/py/manifest.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

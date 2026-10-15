@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Review build: keep search engines out until Vince Cronin signs off. Remove before public launch. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>GEOSLAM</title>
+  <meta name="description" content="Seismo-Lineament Analysis Method (SLAM): project an earthquake's nodal planes and their uncertainty onto the ground surface.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <link href="assets/app.css" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <aside class="panel" id="panel">
+    <header class="brand">
+      <div class="brand-row">
+        <h1>GEOSLAM</h1>
+        <nav class="brand-links">
+          <button type="button" class="linkish" data-open="methods">How it works</button>
+          <button type="button" class="linkish" data-open="about">About</button>
+        </nav>
+      </div>
+      <p class="tagline">Where should an earthquake's fault meet the ground? Project its focal mechanism, with uncertainty, onto real terrain.</p>
+    </header>
+
+    <form id="flow" autocomplete="off" novalidate>
+      <!-- Step 1 -->
+      <section class="step" id="step-event" data-step="1">
+        <h2><span class="step-n">1</span>Earthquake</h2>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" class="tab is-on" data-tab="byid" aria-selected="true">Event ID</button>
+          <button type="button" role="tab" class="tab" data-tab="search" aria-selected="false">Find on map</button>
+          <button type="button" role="tab" class="tab" data-tab="manual" aria-selected="false">Enter values</button>
+        </div>
+
+        <div class="tabpane" data-pane="byid">
+          <label class="field">
+            <span>USGS ComCat event ID</span>
+            <div class="inline">
+              <input id="event-id" name="event-id" placeholder="e.g. nc72282711" spellcheck="false">
+              <button type="button" id="load-event" class="btn">Load</button>
+            </div>
+          </label>
+          <p class="hint">Try <button type="button" class="linkish example" data-id="nc72282711">2014 South Napa M6.0</button>, <button type="button" class="linkish example" data-id="nc1097977">1983 Truckee M4</button> or <button type="button" class="linkish example" data-id="se60324281">2020 Sparta NC M5.1</button>.</p>
+        </div>
+
+        <div class="tabpane" data-pane="search" hidden>
+          <p class="hint">Searches the area shown on the map for earthquakes that have a focal mechanism.</p>
+          <div class="grid2">
+            <label class="field"><span>From</span><input type="date" id="s-start"></label>
+            <label class="field"><span>To</span><input type="date" id="s-end"></label>
+            <label class="field"><span>Minimum magnitude</span><input type="number" id="s-minmag" value="3.5" step="0.1" min="0"></label>
+            <div class="field"><span>&nbsp;</span><button type="button" id="do-search" class="btn">Search this area</button></div>
+          </div>
+          <ol id="search-results" class="results-list"></ol>
+        </div>
+
+        <div class="tabpane" data-pane="manual" hidden>
+          <p class="hint">Use your own relocated hypocentre and mechanism. Azimuths from true north; depth below sea level.</p>
+          <div class="grid3">
+            <label class="field"><span>Latitude</span><input type="number" id="m-lat" step="any"></label>
+            <label class="field"><span>Longitude</span><input type="number" id="m-lon" step="any"></label>
+            <label class="field"><span>Depth (km)</span><input type="number" id="m-depth" step="any" min="0"></label>
+            <label class="field"><span>Strike</span><input type="number" id="m-strike" step="any"></label>
+            <label class="field"><span>Dip</span><input type="number" id="m-dip" step="any" min="0" max="90"></label>
+            <label class="field"><span>Rake</span><input type="number" id="m-rake" step="any"></label>
+            <label class="field"><span>Strike ± (°)</span><input type="number" id="m-su" step="any" min="0" value="10"></label>
+            <label class="field"><span>Dip ± (°)</span><input type="number" id="m-du" step="any" min="0" value="10"></label>
+            <label class="field"><span>Magnitude</span><input type="number" id="m-mag" step="any"></label>
+          </div>
+          <fieldset class="sub">
+            <legend>Location uncertainty (m)</legend>
+            <div class="grid4">
+              <label class="field"><span>Horiz. major</span><input type="number" id="m-eh1" step="any" min="0" value="500"></label>
+              <label class="field"><span>Azimuth</span><input type="number" id="m-eh1az" step="any" value="0"></label>
+              <label class="field"><span>Horiz. minor</span><input type="number" id="m-eh2" step="any" min="0" value="500"></label>
+              <label class="field"><span>Vertical</span><input type="number" id="m-ez" step="any" min="0" value="1000"></label>
+            </div>
+          </fieldset>
+          <button type="button" id="use-manual" class="btn">Use these values</button>
+        </div>
+
+        <div id="event-card" class="event-card" hidden></div>
+      </section>
+
+      <!-- Step 2 -->
+      <section class="step" id="step-mech" data-step="2" hidden>
+        <h2><span class="step-n">2</span>Focal mechanism</h2>
+        <div id="mech-list" class="mech-list" role="radiogroup" aria-label="Focal mechanism"></div>
+        <div class="grid2 sliders">
+          <label class="field range">
+            <span>Strike uncertainty <output id="su-out"></output></span>
+            <input type="range" id="su" min="0" max="45" step="1">
+          </label>
+          <label class="field range">
+            <span>Dip uncertainty <output id="du-out"></output></span>
+            <input type="range" id="du" min="0" max="45" step="1">
+          </label>
+        </div>
+        <p id="mech-note" class="hint"></p>
+      </section>
+
+      <!-- Step 3 -->
+      <section class="step" id="step-unc" data-step="3" hidden>
+        <h2><span class="step-n">3</span>Location uncertainty</h2>
+        <p id="unc-text" class="unc-text"></p>
+        <div id="unc-assume" class="grid2" hidden>
+          <label class="field"><span>Assumed horizontal (m)</span><input type="number" id="a-eh" value="2000" min="0"></label>
+          <label class="field"><span>Assumed vertical (m)</span><input type="number" id="a-ez" value="2000" min="0"></label>
+        </div>
+        <label class="field range">
+          <span>Width multiplier <output id="mult-out"></output></span>
+          <input type="range" id="mult" min="0.5" max="3" step="0.1" value="1">
+        </label>
+      </section>
+
+      <!-- Step 4 -->
+      <section class="step" id="step-dem" data-step="4" hidden>
+        <h2><span class="step-n">4</span>Terrain</h2>
+        <div class="choice">
+          <label><input type="radio" name="dem-src" value="3dep" checked> USGS 3DEP elevation <span class="muted">(United States)</span></label>
+          <label><input type="radio" name="dem-src" value="upload"> My own DEM <span class="muted">(GeoTIFF or Esri ASCII grid)</span></label>
+        </div>
+        <div id="upload-box" hidden>
+          <input type="file" id="dem-file" accept=".tif,.tiff,.asc,.txt,.dat">
+          <div id="ascii-zone" class="grid2" hidden>
+            <label class="field"><span>UTM zone of the grid</span><input type="number" id="ascii-zone-n" min="1" max="60"></label>
+            <label class="field"><span>Hemisphere</span>
+              <select id="ascii-hemi"><option value="N">North</option><option value="S">South</option></select></label>
+          </div>
+          <p class="hint">Files stay on your computer. Lat/lon GeoTIFFs are reprojected to UTM; ASCII grids must already be in UTM metres.</p>
+        </div>
+        <p id="dem-plan" class="hint"></p>
+      </section>
+
+      <details class="advanced" id="advanced">
+        <summary>Advanced settings</summary>
+        <div class="adv-body">
+          <fieldset class="sub">
+            <legend>Swath construction</legend>
+            <label><input type="radio" name="method" value="envelope" checked> Full envelope of every plane within the uncertainty</label>
+            <label><input type="radio" name="method" value="cronin"> Cronin's seven bounding planes (as in SLAMcode)</label>
+          </fieldset>
+          <fieldset class="sub">
+            <legend>Hypocentre depth is measured from</legend>
+            <label><input type="radio" name="datum" value="sea_level" checked> Sea level (Cronin's convention)</label>
+            <label><input type="radio" name="datum" value="surface"> The ground surface at the epicentre</label>
+          </fieldset>
+          <div class="grid2">
+            <label class="field"><span>Map half-width (km)</span><input type="number" id="half-km" min="3" max="80" step="1" placeholder="auto"></label>
+            <label class="field"><span>DEM cell size (m)</span><input type="number" id="cell-m" min="1" max="500" step="1" placeholder="auto"></label>
+            <label class="field"><span>Seismicity window (days after)</span><input type="number" id="seis-days" min="0" max="3650" value="30"></label>
+            <label class="field"><span>Seismicity minimum M</span><input type="number" id="seis-mag" min="0" step="0.1" value="1.5"></label>
+          </div>
+          <label class="check"><input type="checkbox" id="show-bounds" checked> Show the bounding-plane traces</label>
+        </div>
+      </details>
+
+      <div class="run-row">
+        <button type="submit" id="run" class="btn primary" disabled>Map the seismo-lineaments</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <section id="results" class="results" hidden>
+      <h2>Results</h2>
+      <div id="plane-results"></div>
+      <div class="exports">
+        <button type="button" class="btn small" id="share">Copy share link</button>
+        <button type="button" class="btn small" id="dl-geojson">GeoJSON</button>
+        <button type="button" class="btn small" id="dl-kml">KML</button>
+        <button type="button" class="btn small" id="dl-png">Map image</button>
+        <button type="button" class="btn small" id="dl-txt">Summary</button>
+      </div>
+      <p class="hint">A fault is a candidate when it lies inside a seismo-lineament <em>and</em> its orientation and slip agree with that nodal plane. Check both planes: the focal mechanism alone cannot tell the fault from the auxiliary plane.</p>
+    </section>
+
+    <footer class="credits">
+      SLAM was developed by <a href="https://croninprojects.org/Vince/SLAM/" target="_blank" rel="noopener">Vince Cronin</a> (Baylor University). GEOSLAM by Luke Pajer. Data: USGS ComCat, 3DEP, Quaternary Fault and Fold Database. <a href="https://github.com/The-Geology-Guy/GEOSLAM" target="_blank" rel="noopener">Source code</a>.
+    </footer>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map" aria-label="Map"></div>
+    <div class="map-tools">
+      <label class="basemap">Base map
+        <select id="basemap">
+          <option value="topo">USGS topographic</option>
+          <option value="relief">USGS shaded relief</option>
+          <option value="imagery">USGS imagery</option>
+          <option value="osm">OpenStreetMap</option>
+        </select>
+      </label>
+      <div class="legend" id="legend" hidden>
+        <div><i class="sw np1"></i>Nodal plane 1 lineament</div>
+        <div><i class="sw np2"></i>Nodal plane 2 lineament</div>
+        <div><i class="ln trace"></i>Mean-plane ground trace</div>
+        <div><i class="ln fault"></i>Quaternary fault (USGS)</div>
+        <div><i class="dot quake"></i>Seismicity after the event</div>
+        <label class="check"><input type="checkbox" id="show-hs" checked> Terrain lit across the plane</label>
+      </div>
+    </div>
+    <div id="busy" class="busy" hidden><div class="bar"></div><span id="busy-text"></span></div>
+  </main>
+</div>
+
+<dialog id="dlg-methods" class="dlg">
+  <form method="dialog"><button class="dlg-close" aria-label="Close">×</button></form>
+  <h2>How SLAM works</h2>
+  <p>A shallow earthquake breaks a fault. If that fault is roughly planar between the hypocentre and the surface, its trace must lie where the fault plane meets the topography. The focal mechanism gives two candidate planes (nodal planes) through the hypocentre; SLAM projects each one to the ground.</p>
+  <p>Neither the hypocentre nor the plane orientation is known exactly, so each projected line becomes a swath: the <strong>seismo-lineament</strong>. It is a band when only the location is uncertain, and a bow tie, narrowest near the epicentre, when the orientation is uncertain too.</p>
+  <h3>The geometry</h3>
+  <p>Everything is computed in UTM metres with <em>x</em> east, <em>y</em> north and <em>z</em> up. A plane with dip δ and dip direction α (corrected from true to grid north) has upward unit normal</p>
+  <p class="eq">n = (sin δ sin α, sin δ cos α, cos δ)</p>
+  <p>For a ground point at position <strong>P</strong> relative to the hypocentre, the distance to the plane is |<strong>n</strong>·<strong>P</strong>|. The point is on the plane's uncertainty slab when that distance is no more than the half-width</p>
+  <p class="eq">h = √( Σ (n·eᵢ)² aᵢ² )</p>
+  <p>which is the distance to planes parallel to the fault plane and tangent to the hypocentre's uncertainty ellipsoid (semi-axes aᵢ along directions eᵢ). This is Cronin's <code>findHalfWidth</code>.</p>
+  <h3>Orientation uncertainty</h3>
+  <p>Cronin's code evaluates seven planes: the mean plane, the four combinations of dip ± σ and dip direction ± σ, and the steep plane at the mean direction. GEOSLAM's default instead takes every plane inside that uncertainty rectangle, which fills the region Cronin reads between the outermost lines. Switch to his seven planes under Advanced settings to reproduce published maps.</p>
+  <h3>Reading the result</h3>
+  <p>The terrain is lit from opposite the dip direction at a low sun angle, which brings out scarps facing along the fault. A mapped fault is a candidate when it lies within a seismo-lineament and its orientation and slip match that plane. SLAM narrows the search; geomorphology, seismicity and fieldwork decide.</p>
+  <p class="muted">Full derivation and references: <a href="https://github.com/The-Geology-Guy/GEOSLAM/blob/main/docs/METHOD.md" target="_blank" rel="noopener">docs/METHOD.md</a>. Cronin, V.S., et al., 2008, <em>Environmental &amp; Engineering Geoscience</em> 14(3):199–219.</p>
+</dialog>
+
+<dialog id="dlg-about" class="dlg">
+  <form method="dialog"><button class="dlg-close" aria-label="Close">×</button></form>
+  <h2>About GEOSLAM</h2>
+  <p>The Seismo-Lineament Analysis Method is the work of Vince Cronin (Baylor University), developed since 2004 with many students and collaborators. GEOSLAM is an open-source Python implementation by Luke Pajer, faithful to Cronin's current code and checked against published case studies such as the 2014 South Napa earthquake.</p>
+  <p>Everything runs in your browser. Event data come from the USGS Comprehensive Catalog, terrain from USGS 3DEP, and fault traces from the USGS Quaternary Fault and Fold Database. Uploaded DEMs never leave your computer.</p>
+  <h3>Citing</h3>
+  <p class="cite">Cronin, V.S., Millard, M.A., Seidman, L.E., and Bayliss, B.G., 2008, The Seismo-Lineament Analysis Method (SLAM): a reconnaissance tool to help find seismogenic faults: Environmental &amp; Engineering Geoscience, v. 14, no. 3, p. 199–219.</p>
+  <p class="cite">Pajer, L., GEOSLAM: Python implementation of the Seismo-Lineament Analysis Method, https://geoslam.org.</p>
+  <p class="muted">Base maps: USGS The National Map (public domain); © OpenStreetMap contributors. Code: MIT licence.</p>
+</dialog>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>
