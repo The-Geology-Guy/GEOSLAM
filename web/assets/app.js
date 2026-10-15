@@ -355,13 +355,23 @@ async function ensureDem() {
     busy(true, "Fetching terrain from USGS 3DEP");
     const [n, m] = S.plan.size;
     const p = new URLSearchParams({ bbox: S.plan.bbox.join(","), bboxSR: S.plan.epsg, imageSR: S.plan.epsg, size: `${n},${m}`,
-      format: "tiff", pixelType: "F32", interpolation: "RSP_BilinearInterpolation", noDataInterpretation: "esriNoDataMatchAny", f: "image" });
+      format: "bsq", pixelType: "F32", interpolation: "RSP_BilinearInterpolation", noDataInterpretation: "esriNoDataMatchAny", f: "image" });
     const r = await fetch(`${THREEDEP}?${p}`);
     if (!r.ok) throw new Error(`USGS 3DEP did not return terrain (HTTP ${r.status}). Try again, or upload your own DEM.`);
-    const { data, w, h, nodata } = await readTiff(await r.arrayBuffer());
+    // Raw band-sequential float32 grid (row 0 = north) followed by a 1-bit validity mask.
+    // (The service's GeoTIFF output omits empty tiles, which breaks TIFF readers.)
+    const raw = await r.arrayBuffer();
+    const w = n, h = m, cells = n * m;
+    if (raw.byteLength < cells * 4) throw new Error("USGS 3DEP returned an incomplete terrain grid. Try again in a moment.");
+    const data = new Float32Array(raw.slice(0, cells * 4));
+    const mask = raw.byteLength >= cells * 4 + Math.ceil(cells / 8) ? new Uint8Array(raw, cells * 4, Math.ceil(cells / 8)) : null;
     let valid = 0;
-    for (let i = 0; i < data.length; i++) { const v = data[i]; if (v === nodata || v < -1e4 || v > 1e5 || Number.isNaN(v)) data[i] = NaN; else valid++; }
-    if (valid < 0.5 * data.length) throw new Error("USGS 3DEP has little or no elevation data here (it covers the United States). Choose “My own DEM” and upload a GeoTIFF.");
+    for (let i = 0; i < cells; i++) {
+      const v = data[i];
+      const ok = !(v < -1e4 || v > 1e5 || Number.isNaN(v)) && (!mask || (mask[i >> 3] >> (7 - (i & 7))) & 1);
+      if (ok) valid++; else data[i] = NaN;
+    }
+    if (valid < 0.5 * cells) throw new Error("USGS 3DEP has little or no elevation data here (it covers the United States). Choose “My own DEM” and upload a GeoTIFF.");
     const cs = (S.plan.bbox[2] - S.plan.bbox[0]) / w;
     busyText("Preparing terrain");
     S.demInfo = JSON.parse(await rpc("setDemUtm", [data, h, w, S.plan.bbox[0], S.plan.bbox[3], cs, S.plan.epsg, "USGS 3DEP"], [data.buffer]));
