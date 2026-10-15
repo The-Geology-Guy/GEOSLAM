@@ -291,14 +291,18 @@ def _envelope(Pf, d0, a0, sd, sa, half_width, step, chunk):
     samples = _rect_boundary(d0, a0, sd, sa, step)
     normals = plane_normal(samples[:, 0], samples[:, 1])   # (K, 3)
     widths = np.atleast_1d(half_width(normals))            # (K,)
+    # float32 halves memory traffic; positions are relative to the focus (< ~1e5 m),
+    # so single precision still resolves distances to ~1 cm.
+    normals_t = normals.T.astype(np.float32)
+    widths32 = widths.astype(np.float32)
     out = np.zeros(len(Pf), bool)
     margin = np.zeros(len(Pf))
     hmin = float(widths.min())
     d_lo, d_hi = d0 - sd, d0 + sd
     for s in range(0, len(Pf), chunk):
         p = Pf[s:s + chunk]
-        f = p @ normals.T                                    # (m, K)
-        slab_margin = np.min(np.abs(f) - widths, axis=1)
+        f = p.astype(np.float32) @ normals_t                 # (m, K)
+        slab_margin = np.min(np.abs(f) - widths32, axis=1).astype(float)
         inside = slab_margin <= 0.0
         fmin, fmax = f.min(axis=1), f.max(axis=1)
         # interior critical points of f: n parallel to +/-P (f = +/-|P|)
