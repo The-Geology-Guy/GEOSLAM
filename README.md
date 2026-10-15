@@ -50,6 +50,20 @@ plot_slam(r)
 
 Cronin's input spreadsheet layout can be read with `geoslam.io.read_cronin_table`.
 
+### Report figures
+
+`geoslam.report.render` draws publication-style maps in the manner of Cronin's SLAM
+figures (terrain filling the frame, latitude/longitude on all edges, dashed lineament
+edges, black mean trace, labelled beachballs A1, A2, B1…) as PNG, PDF or SVG:
+
+```python
+from geoslam.report import render, ReportItem, ReportOptions
+png = render(dem, [ReportItem("A1", "A", r)], ReportOptions(fmt="pdf", legend=True), faults=faults)
+```
+
+The web app at https://geoslam.org exposes the same figures under **Report view & download**,
+along with the terrain image (PNG + world file) and the DEM as an Esri ASCII grid.
+
 ## Data sources and API keys
 
 | Data | Default source | Key |

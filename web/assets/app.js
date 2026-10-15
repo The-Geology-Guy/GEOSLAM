@@ -685,9 +685,14 @@ function renderReportList() {
       <label class="toggle"><input type="checkbox" data-k="np1" ${e.planes.np1 ? "checked" : ""}> 1</label>
       <label class="toggle"><input type="checkbox" data-k="np2" ${e.planes.np2 ? "checked" : ""}> 2</label>
       <button type="button" class="rm" aria-label="Remove">×</button>`;
-    li.querySelector(".letter").addEventListener("change", (ev) => { e.letter = ev.target.value.trim() || nextLetter(); ev.target.value = e.letter; });
+    li.querySelector(".letter").addEventListener("change", (ev) => { e.letter = ev.target.value.trim() || nextLetter(); e.custom = true; ev.target.value = e.letter; });
     li.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.addEventListener("change", () => { e.planes[cb.dataset.k] = cb.checked; }));
-    li.querySelector(".rm").addEventListener("click", () => { S.report.splice(idx, 1); renderReportList(); });
+    li.querySelector(".rm").addEventListener("click", () => {
+      S.report.splice(idx, 1);
+      // keep automatic letters consecutive (A, B, C…) unless the user typed their own
+      if (!S.report.some((x) => x.custom)) S.report.forEach((x, i) => { x.letter = LETTERS[i] || x.letter; });
+      renderReportList();
+    });
     ol.appendChild(li);
   });
   $("#rep-add").textContent = S.report.length ? "Add this earthquake too" : "Add this earthquake to the report";
