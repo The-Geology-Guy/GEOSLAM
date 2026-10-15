@@ -120,6 +120,7 @@ const map = new maplibregl.Map({
   container: "map", style, center: [-98.5, 39], zoom: 3.4, preserveDrawingBuffer: true,
   attributionControl: { compact: true },
 });
+window.geoslamMap = map;  // handy for debugging in the console
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
 $("#basemap").addEventListener("change", (e) => {
