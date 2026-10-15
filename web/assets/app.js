@@ -10,7 +10,8 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
 /* ------------------------------------------------------------------ worker */
-const worker = new Worker("assets/worker.js");
+const BUILD = "__BUILD__";
+const worker = new Worker(`assets/worker.js?v=${BUILD}`);
 let seq = 0;
 const pending = new Map();
 worker.onmessage = (e) => {
@@ -31,7 +32,7 @@ function rpc(op, args = [], transfer = []) {
 const pycall = (fn, ...args) => rpc("call", [fn, ...args]);
 
 const pyReady = (async () => {
-  const man = await fetch("py/manifest.json").then((r) => r.json());
+  const man = await fetch("py/manifest.json", { cache: "no-store" }).then((r) => r.json());
   return rpc("init", ["../py/" + man.wheel]);
 })();
 pyReady.catch((e) => setStatus("The calculator could not start: " + e.message, "err"));

@@ -22,10 +22,13 @@ jobs:
       - name: Build the GEOSLAM wheel for the browser
         run: |
           pip install build
-          python -m build --wheel --outdir _site/py
+          BUILD=${GITHUB_SHA::10}
           cp -r web/. _site/
-          WHEEL=$(ls _site/py/*.whl | xargs -n1 basename)
-          echo "{\"wheel\": \"$WHEEL\", \"commit\": \"$GITHUB_SHA\"}" > _site/py/manifest.json
+          python -m build --wheel --outdir _site/py/$BUILD
+          WHEEL=$(ls _site/py/$BUILD/*.whl | xargs -n1 basename)
+          echo "{\"wheel\": \"$BUILD/$WHEEL\", \"commit\": \"$GITHUB_SHA\"}" > _site/py/manifest.json
+          # cache-bust static assets so a deploy is picked up immediately
+          sed -i "s/__BUILD__/$BUILD/g" _site/index.html _site/assets/app.js
           cat _site/py/manifest.json
       - uses: actions/upload-pages-artifact@v3
         with:
