@@ -35,6 +35,7 @@ const pyReady = (async () => {
   return rpc("init", ["../py/" + man.wheel]);
 })();
 pyReady.catch((e) => setStatus("The calculator could not start: " + e.message, "err"));
+window.addEventListener("unhandledrejection", (e) => { console.error(e.reason); setStatus(String(e.reason?.message || e.reason), "err"); busy(false); });
 
 /* ------------------------------------------------------------------- state */
 const S = {
@@ -70,7 +71,7 @@ $$(".example").forEach((b) => b.addEventListener("click", () => { $("#event-id")
 $("#load-event").addEventListener("click", () => loadEvent($("#event-id").value.trim()));
 $("#event-id").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); loadEvent(e.target.value.trim()); } });
 $("#do-search").addEventListener("click", searchArea);
-$("#use-manual").addEventListener("click", useManual);
+$("#use-manual").addEventListener("click", () => useManual().catch((e) => setStatus(e.message, "err")));
 $$('input[name="dem-src"]').forEach((r) => r.addEventListener("change", () => {
   $("#upload-box").hidden = demSource() !== "upload";
   S.demKey = null;
@@ -189,7 +190,7 @@ async function loadEvent(id) {
       setStatus(`${id} has no focal mechanism in ComCat. Its location is copied into “Enter values” so you can add a mechanism from another source.`, "err");
       return;
     }
-    setCase("comcat", c);
+    await setCase("comcat", c);
     setStatus("");
   } catch (e) {
     setStatus(e.message, "err");
@@ -215,7 +216,7 @@ async function useManual() {
     event: { id: "entered", lon: v.lon, lat: v.lat, depth_km: v.depth, mag: v.mag, mag_type: "", time: "", title: "Entered hypocentre" },
     uncertainty: unc,
     mechanisms: [{ label: "Entered mechanism", source: "user", product: "manual", method: "", has_uncertainty: !!(v.su || v.du), np1, np2 }],
-  });
+  }).catch((e) => setStatus(e.message, "err"));
 }
 
 async function setCase(kind, c, keep = {}) {

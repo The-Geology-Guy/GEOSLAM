@@ -65,13 +65,13 @@ def describe_uncertainty(d) -> dict:
         d = json.loads(d)
     u = _unc_from_dict(d)
     if u is None:
-        return {"text": "No location uncertainty reported"}
+        return json.dumps({"text": "No location uncertainty reported"})
     from .orientation import plane_normal
     h = float(u.half_width(plane_normal(90, 0)))
     h2 = float(u.half_width(plane_normal(90, 90)))
     v = float(u.half_width(plane_normal(0, 0)))
-    return {"horizontal_m": [round(min(h, h2)), round(max(h, h2))], "vertical_m": round(v),
-            "confidence": u.confidence, "source": u.source}
+    return json.dumps({"horizontal_m": [round(min(h, h2)), round(max(h, h2))], "vertical_m": round(v),
+                       "confidence": u.confidence, "source": u.source})
 
 
 # ---------------------------------------------------------------- event intake

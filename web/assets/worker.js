@@ -56,7 +56,12 @@ const handlers = {
   call: ([fn, ...args]) => {
     const f = py.pyimport("geoslam.web")[fn];
     const r = f(...args);
-    return typeof r === "object" && r !== null && r.toJs ? r.toJs() : r;
+    if (r && typeof r === "object" && r.toJs) {
+      const js = r.toJs({ dict_converter: Object.fromEntries, create_pyproxies: false });
+      r.destroy();
+      return js;
+    }
+    return r;
   },
   setDemUtm: ([buf, ...rest]) => py.globals.get("_set_dem_utm")(buf, ...rest),
   setDemGeo: ([buf, ...rest]) => py.globals.get("_set_dem_geo")(buf, ...rest),
