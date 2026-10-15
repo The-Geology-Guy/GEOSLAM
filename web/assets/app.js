@@ -234,6 +234,7 @@ async function setCase(kind, c, keep = {}) {
   await renderUncertainty();
   ["#step-mech", "#step-unc", "#step-dem"].forEach((s) => { $(s).hidden = false; });
   $("#run").disabled = false;
+  await mapReady;
   setData("search", EMPTY);
   setData("epi", { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [ev.lon, ev.lat] }, properties: {} }] });
   await refreshPlan();
@@ -428,6 +429,7 @@ async function drawHillshade() {
   cv.getContext("2d").putImageData(new ImageData(rgba, w, h), 0, 0);
   const url = cv.toDataURL("image/png");
   const coords = S.demInfo.corners;
+  await mapReady;
   if (map.getSource("hillshade")) map.getSource("hillshade").updateImage({ url, coordinates: coords });
   else {
     map.addSource("hillshade", { type: "image", url, coordinates: coords });
@@ -452,6 +454,7 @@ async function loadContext() {
       if (!js.exceededTransferLimit && (js.features || []).length < 2000) break;
     }
     S.faults = { type: "FeatureCollection", features: feats }; S.faultsKey = fk;
+    await mapReady;
     setData("faults", S.faults);
   })());
   const ev = S.caseObj.event;
@@ -464,6 +467,7 @@ async function loadContext() {
     const js = await fetchJSON(`${COMCAT}?${p}`, "Seismicity").catch(() => EMPTY);
     S.quakes = { type: "FeatureCollection", features: (js.features || []).filter((f) => f.id !== ev.id).map((f) => ({ type: "Feature", geometry: { type: "Point", coordinates: f.geometry.coordinates.slice(0, 2) }, properties: { mag: f.properties.mag } })) };
     S.quakesKey = qk;
+    await mapReady;
     setData("quakes", S.quakes);
   })());
   else if (!ev.time) setData("quakes", EMPTY);
@@ -480,7 +484,7 @@ async function runAll() {
   try {
     setStatus("");
     busy(true, "Starting the calculator (first run takes a few seconds)");
-    await pyReady;
+    await Promise.all([pyReady, mapReady]);
     await refreshPlan();
     const ctx = loadContext();
     await ensureDem();
@@ -561,7 +565,7 @@ function renderResults() {
 async function updateBeachball() {
   const m = S.caseObj?.mechanisms?.[S.mech];
   if (!m || m.np1.rake == null) return;
-  await pyReady;
+  await Promise.all([pyReady, mapReady]);
   const n = 161;
   const rgba = await rpc("beachball", [m.np1.strike, m.np1.dip, m.np1.rake, n]);
   if (map.hasImage("beachball")) map.removeImage("beachball");
