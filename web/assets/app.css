@@ -377,7 +377,10 @@ fieldset.checks > label { margin: 3px 0; }
   :root { font-size: 13px; }
   body { overflow: auto; }
   .desktop { position: static; display: flex; flex-direction: column; padding: 6px 6px calc(var(--task-h) + 8px); gap: 6px; min-height: 100dvh; }
-  .win-map { order: -1; height: 46vh; height: 46dvh; flex: none; position: sticky; top: 0; z-index: 30; }
+  /* fixed 4:3 map: its size depends only on the screen width, so the browser bar
+     growing and shrinking while scrolling never resizes (and redraws) the map */
+  .win-map { order: -1; height: auto; flex: none; position: sticky; top: 0; z-index: 30; }
+  .win-map .map-wrap { flex: none; aspect-ratio: 4 / 3; height: auto; }
   .menubar { z-index: 5; }
   .win-app .win-body { overflow: visible; }
   .tb-max { display: none; }
