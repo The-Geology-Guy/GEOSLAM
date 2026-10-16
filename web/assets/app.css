@@ -274,7 +274,13 @@ fieldset.sub > label > input, .choice > label > input, .check > input { margin-r
 #map { position: absolute; inset: 2px; }
 .map-tools { position: absolute; top: 10px; left: 10px; z-index: 2; max-width: 250px; }
 .legend { background: var(--face); box-shadow: var(--raised-win); padding: 3px; }
-.legend-title { background: linear-gradient(90deg, var(--title-a), var(--title-b)); color: #fff; font-weight: 700; padding: 1px 4px; font-size: 11px; }
+.legend-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 0; cursor: pointer; text-align: left;
+  background: linear-gradient(90deg, var(--title-a), var(--title-b)); color: #fff; font-weight: 700; padding: 1px 2px 1px 4px; font-size: 11px; }
+.legend-tg { width: 14px; height: 12px; flex: none; background: var(--face) no-repeat center; box-shadow: var(--raised);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='2' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h6v2H0z'/%3E%3C/svg%3E"); }
+.legend.is-collapsed .legend-tg { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h7v1H6v1H5v1H4v1H3V3H2V2H1V1H0z'/%3E%3C/svg%3E"); }
+.legend.is-collapsed .legend-body { display: none; }
+.legend.is-collapsed { padding: 2px; }
 .legend-body { padding: 4px 4px 2px; }
 .legend-body > div { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
 .legend .check { margin: 5px 0 0; }
@@ -371,7 +377,8 @@ fieldset.checks > label { margin: 3px 0; }
   :root { font-size: 13px; }
   body { overflow: auto; }
   .desktop { position: static; display: flex; flex-direction: column; padding: 6px 6px calc(var(--task-h) + 8px); gap: 6px; min-height: 100dvh; }
-  .win-map { order: -1; height: 46vh; height: 46dvh; flex: none; position: sticky; top: 0; z-index: 10; }
+  .win-map { order: -1; height: 46vh; height: 46dvh; flex: none; position: sticky; top: 0; z-index: 30; }
+  .menubar { z-index: 5; }
   .win-app .win-body { overflow: visible; }
   .tb-max { display: none; }
   .desktop.min-app #win-app, .desktop.min-map #win-map { display: none; }

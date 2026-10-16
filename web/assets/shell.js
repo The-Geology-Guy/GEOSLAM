@@ -147,13 +147,26 @@ function fmtLonLat(ll) {
   const map = window.geoslamMap;
   if (!map) { if (tries < 100) setTimeout(() => hookMap(tries + 1), 100); return; }
   const zoom = () => { $("#sb-zoom").textContent = "Zoom " + map.getZoom().toFixed(1); };
-  map.on("mousemove", (e) => { $("#sb-coords").textContent = fmtLonLat(e.lngLat); });
-  map.on("mouseout", () => { $("#sb-coords").textContent = fmtLonLat(map.getCenter()) + " (centre)"; });
+  let hovering = false;
+  const centre = () => { if (!hovering) $("#sb-coords").textContent = fmtLonLat(map.getCenter()) + " (centre)"; };
+  map.on("mousemove", (e) => { hovering = e.originalEvent?.pointerType !== "touch"; if (hovering) $("#sb-coords").textContent = fmtLonLat(e.lngLat); });
+  map.on("mouseout", () => { hovering = false; centre(); });
+  map.on("move", centre);
   map.on("zoom", zoom);
   zoom();
   $("#sb-coords").textContent = fmtLonLat(map.getCenter()) + " (centre)";
   new ResizeObserver(() => map.resize()).observe($(".map-wrap"));
 })();
+
+/* ------------------------------------------------------- collapsible legend */
+const legend = $("#legend"), legendBtn = legend.querySelector(".legend-title");
+function setLegend(open) {
+  legend.classList.toggle("is-collapsed", !open);
+  legendBtn.setAttribute("aria-expanded", String(open));
+  legendBtn.title = open ? "Hide the legend" : "Show the legend";
+}
+legendBtn.addEventListener("click", () => setLegend(legend.classList.contains("is-collapsed")));
+setLegend(!mobile());   // phones start with it folded so the map stays visible
 
 /* --------------------------------------------- status bar mirrors the busy box */
 const sbApp = $("#sb-app");
