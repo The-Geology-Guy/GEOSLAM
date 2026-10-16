@@ -144,6 +144,8 @@ input[type="text"], input[type="number"], input[type="date"], input:not([type]),
   background-color: var(--field); border: 0; border-radius: 0; box-shadow: var(--sunken); padding: 3px 4px 3px 5px; height: 21px; width: 100%; min-width: 0; color: var(--ink); }
 input:disabled, select:disabled { background-color: var(--face); color: var(--shadow); }
 input[type="number"] { -moz-appearance: textfield; }
+input[type="date"] { -webkit-appearance: none; appearance: none; display: flex; align-items: center; text-align: left; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 input::-webkit-inner-spin-button { opacity: 1; }
 select { appearance: none; -webkit-appearance: none; padding-right: 20px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='17' shape-rendering='crispEdges'%3E%3Cpath fill='%23c0c0c0' d='M0 0h16v17H0z'/%3E%3Cpath fill='%23fff' d='M1 1h14v1H2v14H1z'/%3E%3Cpath fill='%230a0a0a' d='M15 0h1v17H0v-1h15z'/%3E%3Cpath fill='%23808080' d='M14 1h1v15H1v-1h13z'/%3E%3Cpath d='M4 7h7v1h-1v1H9v1H8v1H7v-1H6V9H5V8H4z'/%3E%3C/svg%3E");
@@ -193,10 +195,16 @@ fieldset.sub > label > input, .choice > label > input, .check > input { margin-r
 .step.is-done > h2::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; vertical-align: 0;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%23006400' d='M6 0h1v3H6v1H5v1H4v1H3v1H2V6H1V5H0V2h1v1h1v1h1V3h1V2h1V1h1z'/%3E%3C/svg%3E") no-repeat; }
 
-.tabs { display: flex; gap: 0; position: relative; z-index: 1; padding-left: 2px; }
-.tab { background: var(--face); border: 0; padding: 3px 9px 4px; margin-right: -1px; cursor: pointer; position: relative; top: 2px;
+/* tab control: the selected tab is taller, bold and joined to the sheet (it covers the
+   sheet's top edge); the others are shorter, greyed and sit behind that edge */
+.tabs { display: flex; align-items: flex-end; gap: 0; position: relative; z-index: 1; padding-left: 2px; }
+.tab { background: var(--face); border: 0; border-radius: 3px 3px 0 0; height: 24px; padding: 3px 10px 0; margin-right: -1px; cursor: pointer;
+  position: relative; color: var(--muted); white-space: nowrap;
   box-shadow: inset 1px 1px var(--hi), inset -1px 0 var(--dark), inset -2px 0 var(--shadow), inset 2px 2px var(--light); }
-.tab.is-on { top: 0; padding: 4px 11px 6px; margin: 0 -2px; z-index: 2; box-shadow: inset 1px 1px var(--hi), inset -1px 0 var(--dark), inset -2px 0 var(--shadow), inset 2px 2px var(--light); }
+.tab:hover { color: var(--ink); }
+.tab.is-on { height: 29px; margin: 0 -2px -2px; padding: 4px 12px 2px; z-index: 2; color: var(--ink); font-weight: 700; }
+.tab.is-on::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 0; height: 3px; background: var(--face); }
+.tab:focus-visible { outline: 1px dotted var(--ink); outline-offset: -5px; }
 .tab-sheet { box-shadow: var(--raised-win); padding: 10px 10px 4px; margin-bottom: 8px; }
 
 .status { min-height: 1.35em; margin: 8px 0 0; }
