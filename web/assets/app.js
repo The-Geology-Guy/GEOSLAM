@@ -111,7 +111,7 @@ const BASEMAPS = {
   imagery: { tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"], max: 16, attr: "USGS The National Map" },
   osm: { tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], max: 19, attr: "© OpenStreetMap contributors" },
 };
-const style = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#dfe4e8" } }] };
+const style = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#c0c0c0" } }] };
 for (const [k, b] of Object.entries(BASEMAPS)) {
   style.sources["bm-" + k] = { type: "raster", tiles: b.tiles, tileSize: 256, maxzoom: b.max, attribution: b.attr };
   style.layers.push({ id: "bm-" + k, type: "raster", source: "bm-" + k, layout: { visibility: k === "topo" ? "visible" : "none" } });
@@ -131,7 +131,7 @@ const mapReady = new Promise((res) => map.on("load", res));
 const EMPTY = { type: "FeatureCollection", features: [] };
 
 mapReady.then(() => {
-  const c = { np1: css("--np1"), np2: css("--np2"), fault: css("--fault"), quake: css("--quake"), ink: "#1e2733" };
+  const c = { np1: css("--np1"), np2: css("--np2"), fault: css("--fault"), quake: css("--quake"), ink: "#000000" };
   for (const id of ["swaths", "traces", "bounds", "faults", "quakes", "epi", "search"]) map.addSource(id, { type: "geojson", data: EMPTY });
   const planeColor = ["match", ["get", "plane"], "NP2", c.np2, c.np1];
   map.addLayer({ id: "swath-fill", type: "fill", source: "swaths", paint: { "fill-color": planeColor, "fill-opacity": 0.22 } });
@@ -148,7 +148,7 @@ mapReady.then(() => {
   map.addLayer({ id: "epi", type: "symbol", source: "epi", layout: {
     "icon-image": "beachball", "icon-size": 0.42, "icon-allow-overlap": true, "icon-offset": [62, -62] } });
   map.addLayer({ id: "epi-star", type: "circle", source: "epi", paint: {
-    "circle-radius": 6, "circle-color": "#ffd400", "circle-stroke-color": "#1e2733", "circle-stroke-width": 1.5 } });
+    "circle-radius": 6, "circle-color": "#ffff00", "circle-stroke-color": "#000000", "circle-stroke-width": 1.5 } });
   map.on("click", "search", (e) => { const id = e.features[0].properties.id; $("#event-id").value = id; loadEvent(id); });
   map.on("mouseenter", "search", () => { map.getCanvas().style.cursor = "pointer"; });
   map.on("mouseleave", "search", () => { map.getCanvas().style.cursor = ""; });
