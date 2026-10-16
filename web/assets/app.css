@@ -354,7 +354,9 @@ fieldset.sub > label > input, .choice > label > input, .check > input { margin-r
   background: var(--face); color: var(--ink); box-shadow: var(--raised-win); flex-direction: column; }
 .dlg[open] { display: flex; }
 .dlg::backdrop { background: transparent; }
-.dlg-body { overflow: auto; padding: 12px 14px; min-height: 0; flex: 1; }
+/* flex 1 1 auto (not 0%): Safari collapses a 0%-basis child of an auto-height dialog */
+.dlg-body { overflow: auto; padding: 12px 14px; min-height: 0; flex: 1 1 auto; }
+.dlg > .titlebar, .dlg-foot { flex: none; }
 .dlg-body.doc { background: var(--field); box-shadow: var(--sunken); margin: 6px 6px 0; line-height: 1.55; font-size: 13px; }
 .dlg-body p { max-width: 64ch; }
 .dlg-body h3 { font-size: 13px; margin: 16px 0 4px; }
@@ -377,11 +379,18 @@ fieldset.sub > label > input, .choice > label > input, .check > input { margin-r
 #rep-msg:not(:empty) { background: var(--tip); border: 1px solid var(--dark); padding: 3px 6px; width: auto; }
 .rep-preview.loading #rep-img { opacity: 0.45; }
 fieldset.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; }
-fieldset.checks > label { margin: 3px 0; }
+fieldset.checks > label { margin: 3px 0; flex-wrap: nowrap; align-items: flex-start; }
+fieldset.checks > label > input { margin-top: 1px; }
 
 /* ------------------------------------------------------------------ small screens */
 @media (max-width: 860px) { .rep-layout { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
+  /* dialogs fill the phone screen with a definite height; their body scrolls inside */
+  .dlg, .dlg.wide { width: calc(100% - 12px); max-width: none; height: calc(100dvh - var(--task-h) - 16px); max-height: none;
+    margin: 6px auto auto; }
+  .dlg[open] { display: flex; }
+  .rep-preview { min-height: 240px; }
+  #rep-img { max-height: 55vh; }
   :root { font-size: 13px; }
   body { overflow: auto; }
   .desktop { position: static; display: flex; flex-direction: column; padding: 6px 6px calc(var(--task-h) + 8px); gap: 6px; min-height: 100dvh; }
