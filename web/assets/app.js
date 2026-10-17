@@ -801,7 +801,7 @@ async function updatePreview() {
   const box = $(".rep-preview");
   box.classList.add("loading");
   try {
-    const bytes = await renderReport("png", 90);
+    const bytes = await renderReport("png", matchMedia("(min-width: 861px)").matches ? 130 : 90);  // sharper preview in the large desktop pane
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
     $("#rep-img").src = previewUrl;

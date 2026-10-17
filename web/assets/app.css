@@ -384,6 +384,16 @@ fieldset.checks > label > input { margin-top: 1px; }
 
 /* ------------------------------------------------------------------ small screens */
 @media (max-width: 860px) { .rep-layout { grid-template-columns: 1fr; } }
+/* desktop: the preview fills the whole left column, down to the bottom of the dialog */
+@media (min-width: 861px) {
+  .dlg.wide { height: calc(100dvh - var(--task-h) - 24px); }
+  .dlg.wide .dlg-body { display: flex; }
+  .dlg.wide .rep-layout { flex: 1; align-items: stretch; min-height: 0; }
+  .dlg.wide .rep-preview { min-height: 0; height: 100%; }
+  .dlg.wide .rep-opts { overflow: auto; min-height: 0; }
+  .dlg.wide #rep-img-wrap { height: 100%; display: flex; align-items: center; justify-content: center; }
+  .dlg.wide #rep-img { max-height: 100%; max-width: 100%; }
+}
 @media (max-width: 760px) {
   /* dialogs fill the phone screen with a definite height; their body scrolls inside */
   .dlg, .dlg.wide { width: calc(100% - 12px); max-width: none; height: calc(100dvh - var(--task-h) - 16px); max-height: none;
